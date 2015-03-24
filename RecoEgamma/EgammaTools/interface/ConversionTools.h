@@ -25,6 +25,7 @@
 #include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackExtra.h"
@@ -73,6 +74,11 @@ class ConversionTools
 
     static reco::GsfElectronRef        matchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<reco::GsfElectronCollection> &eleCol,
                                                   const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, bool allowCkfMatch=true, float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
+
+    static bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron>> &eleCol, 
+					 const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
+					 float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
+
 
 };
 #endif
