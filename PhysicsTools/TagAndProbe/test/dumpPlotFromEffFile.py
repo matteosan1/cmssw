@@ -1,4 +1,5 @@
 import ROOT
+from optparse import OptionParser
 
 def makeTable(h, tablefilename):
     nX = h.GetNbinsX()
@@ -23,15 +24,12 @@ def makeTable(h, tablefilename):
     f.close()
 
 
-def main():
-    inputFileName = "efficiency-mc-GsfElectronToId.root"
-    dir="GsfElectronToRECO"
-    isCutAndCount = False 
-    isMCTruth = False   
-    
-    print "   ##################################################   "
+def main(options):
 
-    if(isCutAndCount):
+    isMCTruth = False   
+
+    print "   ##################################################   "
+    if(options.cc):
         print "Plotting efficiency from cut & count. No background subtraction performed !"
         print "If you want to plot MC truth efficiency, please set: isMCTruth = true."
     else:
@@ -39,8 +37,8 @@ def main():
         print "   ##################################################   "
   
         
-    f = ROOT.TFile(inputFileName)
-    f.cd(dir)
+    f = ROOT.TFile(options.input)
+    f.cd(options.directory)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
     for k in  keyList:
@@ -56,7 +54,7 @@ def main():
 
         print  "   ==================================================   "
         dirName = "%s/cnt_eff_plots/"%(name)
-        if(not isCutAndCount):
+        if(not options.cc):
             dirName = "%s/fit_eff_plots/"%(name)
 
         print "****************************dirName = ", dirName
@@ -71,7 +69,7 @@ def main():
                         makeTable(p, name+".txt")
                         
 
-    if(not isCutAndCount):
+    if(not options.cc):
         ROOT.gDirectory.cd("../")
         keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
         for k in  keyList:
@@ -88,7 +86,7 @@ def main():
             c.SaveAs(plotname)
             ROOT.gDirectory.cd("../")
 
-    if(not isCutAndCount): 
+    if(not options.cc): 
         ROOT.gDirectory.cd("../")
     else:
         ROOT.gDirectory.cd("../../")
@@ -97,6 +95,17 @@ def main():
 
 
 if (__name__ == "__main__"):
-    main()
+    parser = OptionParser()
+    parser.add_option("-i", "--input", default="efficiency-mc-GsfElectronToId.root", help="Input filename")
+    parser.add_option("-d", "--directory", default="GsfElectronToRECO", help="Directory with workspace")
+    parser.add_option("-c", dest="cc", action="store_true", help="Is simple Cut and Count", default=False)
+    parser.add_option("-b", dest="batch", action="store_true", help="ROOT batch mode", default=False)
+
+    (options, arg) = parser.parse_args()
+
+    if (options.batch):
+        ROOT.gROOT.SetBatch(True)
+
+    main(options)
 
 

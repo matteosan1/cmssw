@@ -1,4 +1,5 @@
 import ROOT
+from optparse import OptionParser
 
 def makeTable(h, tablefilename):
     nX = h.GetNbinsX()
@@ -20,20 +21,15 @@ def makeTable(h, tablefilename):
             
     f.close()
 
-def main():
-    dataFileName = "efficiency-data-GsfElectronToId.root"
-    mcFileName   = "efficiency-mc-GsfElectronToId.root"
-    dir="GsfElectronToRECO"
-    subdir="Medium"
-
-    fData = ROOT.TFile(dataFileName)
-    fMC   = ROOT.TFile(mcFileName)
+def main(options):
+    fData = ROOT.TFile(options.data)
+    fMC   = ROOT.TFile(options.mc)
     hData = ""
     hMC = ""
 
-    temp = "%s/%s/fit_eff_plots/" % (dir, subdir)
+    temp = "%s/%s/fit_eff_plots/" % (options.directory, options.subdir)
     if("ToHLT" in temp):
-        temp = "%s/%s/cnt_eff_plots/" %(dir, subdir)
+        temp = "%s/%s/cnt_eff_plots/" %(options.directory, options.subdir)
     fData.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -55,7 +51,7 @@ def main():
                 if (p.ClassName() == "TH2F"):
                     hMC = p
 
-    temp = "ScaleFactor_%s_%s.txt"%(dir, subdir)
+    temp = "ScaleFactor_%s_%s.txt"%(options.directory, options.subdir)
     hData.Divide(hMC)
     makeTable(hData, temp)
     
@@ -63,4 +59,16 @@ def main():
     fMC.Close()
 
 if (__name__ == "__main__"):
-    main()
+    parser = OptionParser()
+    parser.add_option("", "--mc", default="efficiency-mc-GsfElectronToId.root", help="Input filename for MC")
+    parser.add_option("", "--data", default="efficiency-data-GsfElectronToId.root", help="Input filename for data")
+    parser.add_option("-d", "--directory", default="GsfElectronToRECO", help="Directory with workspace")
+    parser.add_option("-s", "--subdir", default="Medium", help="Subdirectory with results")
+    parser.add_option("-b", dest="batch", action="store_true", help="ROOT batch mode", default=False)
+    
+    (options, arg) = parser.parse_args()
+
+    if (options.batch):
+        ROOT.gROOT.SetBatch(True)
+
+    main(options)
