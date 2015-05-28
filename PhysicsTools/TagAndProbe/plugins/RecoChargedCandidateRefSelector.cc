@@ -13,3 +13,4 @@ typedef SingleObjectSelector<
    > RecoChargedCandidateRefSelector;
 
 DEFINE_FWK_MODULE( RecoChargedCandidateRefSelector );
+

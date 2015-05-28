@@ -10,13 +10,14 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+//#include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoEcalCandidateFwd.h"
 
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
-// forward declarations
-
-class ElectronMatchedCandidateProducer : public edm::EDProducer
-{
+class ElectronMatchedCandidateProducer : public edm::EDProducer {
  public:
   explicit ElectronMatchedCandidateProducer(const edm::ParameterSet&);
   ~ElectronMatchedCandidateProducer();
@@ -26,10 +27,10 @@ class ElectronMatchedCandidateProducer : public edm::EDProducer
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() ;
 
-  // ----------member data ---------------------------
+  edm::EDGetTokenT<edm::RefVector<pat::ElectronCollection> > electronCollectionToken_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateCollection> scCollectionToken_;
+  StringCutObjectSelector<reco::RecoEcalCandidate> candSelector_;
 
-  edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronCollectionToken_;
-  edm::EDGetTokenT<edm::View<reco::Candidate> > scCollectionToken_;
   double delRMatchingCut_;
 };
 

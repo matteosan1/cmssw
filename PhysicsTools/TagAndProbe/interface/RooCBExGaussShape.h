@@ -9,12 +9,13 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
+#include "RooTrace.h"
 #include "TMath.h"
 #include "Riostream.h"
 
 class RooCBExGaussShape : public RooAbsPdf {
 public:
-  RooCBExGaussShape() {} ; 
+  RooCBExGaussShape() { TRACE_CREATE } ; 
   RooCBExGaussShape(const char *name, const char *title,
 	      RooAbsReal& _m,
 	      RooAbsReal& _m0,
@@ -25,12 +26,12 @@ public:
 	      RooAbsReal& _frac
 		    );
 
-  RooCBExGaussShape(const RooCBExGaussShape& other, const char* name);
+  RooCBExGaussShape(const RooCBExGaussShape& other, const char* name=0);
   inline virtual TObject* clone(const char* newname) const { return new RooCBExGaussShape(*this,newname);}
   inline ~RooCBExGaussShape(){}
   Double_t evaluate() const ;
   
-  ClassDef(RooCBExGaussShape,1)
+  ClassDef(RooCBExGaussShape,2)
 
 protected:
 
