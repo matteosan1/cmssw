@@ -1,0 +1,18 @@
+<lcgdict>
+  <class name="tagandprobe::dummy"/>
+
+  <class name="RooCBExGaussShape" ClassVersion="2">
+   <version ClassVersion="2" checksum="3803209248"/>
+    <version ClassVersion="1" checksum="1178796923"/>
+  </class>
+
+  <class name="ZGeneratorLineShape" ClassVersion="2">
+   <version ClassVersion="2" checksum="2777463750"/>
+    <version ClassVersion="1" checksum="1178796923"/>
+  </class>
+
+  <class name="RooCMSShape" ClassVersion="2">
+   <version ClassVersion="2" checksum="4180675195"/>
+    <version ClassVersion="1" checksum="1178796923"/>
+  </class>
+</lcgdict>
