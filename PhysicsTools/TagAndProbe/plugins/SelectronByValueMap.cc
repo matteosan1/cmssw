@@ -44,19 +44,17 @@ private:
 
   void produce(edm::Event & event, edm::EventSetup const & setup);
     
-  edm::EDGetTokenT<candidateCollection>    token_inputs;
+  //edm::EDGetTokenT<candidateCollection>    token_inputs;
+  edm::EDGetTokenT<candidateRefVector>    token_inputs;
   StringCutObjectSelector<T> candSelector;
   edm::EDGetTokenT<edm::ValueMap<selection_type> >  token_selection;
   cut_type m_cut;
-
-  //edm::EDGetTokenT<std::vector<pat::Electron> >    token_electrons;
-  //edm::EDGetTokenT<edm::ValueMap<bool> >  token_selection;    
-  //bool m_cut;
 };
   
 template <typename T, typename C>
 SelectorByValueMap<T,C>::SelectorByValueMap(edm::ParameterSet const & config) :
-  token_inputs(consumes<candidateCollection>(config.getParameter<edm::InputTag>("input"))),
+  //token_inputs(consumes<candidateCollection>(config.getParameter<edm::InputTag>("input"))),
+  token_inputs(consumes<candidateRefVector>(config.getParameter<edm::InputTag>("input"))),
   candSelector(config.getParameter<std::string>("cut")),
   token_selection(consumes<edm::ValueMap<selection_type> >(config.getParameter<edm::InputTag>("selection"))),
   m_cut(config.getParameter<cut_type>("id_cut")) {
@@ -67,9 +65,8 @@ template <typename T, typename C>
 void SelectorByValueMap<T, C>::produce(edm::Event & event, const edm::EventSetup & setup) {
   std::auto_ptr<candidateRefVector> candidates(new candidateRefVector());
 
-  
-  
-  edm::Handle<candidateCollection> h_inputs;
+  //edm::Handle<candidateCollection> h_inputs;
+  edm::Handle<candidateRefVector> h_inputs;
   event.getByToken(token_inputs, h_inputs);
 
   // read the selection map from the Event
@@ -78,7 +75,8 @@ void SelectorByValueMap<T, C>::produce(edm::Event & event, const edm::EventSetup
   edm::ValueMap<selection_type> const & selectionMap = * h_selection;
   
   for (unsigned int i = 0; i < h_inputs->size(); ++i) {
-    candidateRef ptr(h_inputs, i);
+    //candidateRef ptr(h_inputs, i);
+    candidateRef ptr = (*h_inputs)[i];//(h_inputs, i);
     if (candSelector(*ptr)) {
       if (selectionMap[ptr] >= m_cut)
 	candidates->push_back(ptr);
@@ -91,3 +89,6 @@ void SelectorByValueMap<T, C>::produce(edm::Event & event, const edm::EventSetup
 
 typedef SelectorByValueMap<pat::Electron, bool> PatElectronSelectorByValueMap;
 DEFINE_FWK_MODULE(PatElectronSelectorByValueMap);
+
+typedef SelectorByValueMap<pat::Photon, bool> PatPhotonSelectorByValueMap;
+DEFINE_FWK_MODULE(PatPhotonSelectorByValueMap);

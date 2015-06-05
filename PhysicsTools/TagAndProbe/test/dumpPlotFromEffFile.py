@@ -1,5 +1,6 @@
 import ROOT
 from optparse import OptionParser
+import sys
 
 def makeTable(h, tablefilename):
     nX = h.GetNbinsX()
@@ -28,13 +29,13 @@ def main(options):
 
     isMCTruth = False   
 
-    print "   ##################################################   "
+    print "##################################################   "
     if(options.cc):
         print "Plotting efficiency from cut & count. No background subtraction performed !"
         print "If you want to plot MC truth efficiency, please set: isMCTruth = true."
     else:
         print "Plotting efficiency from simultaneous fit."
-        print "   ##################################################   "
+        print "##################################################   "
   
         
     f = ROOT.TFile(options.input)
@@ -44,7 +45,7 @@ def main(options):
     for k in  keyList:
         obj = ROOT.gDirectory.GetKey(k).ReadObj();
         name = obj.GetName()
-           
+
         if (not obj.IsA().InheritsFrom("TDirectory")):
             continue
         if (not isMCTruth and "MCtruth" in name):
@@ -60,14 +61,18 @@ def main(options):
         print "****************************dirName = ", dirName
         ROOT.gDirectory.cd(dirName)
         keyList2 = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
+        tableDone = False
         for k in  keyList2:
             obj = ROOT.gDirectory.GetKey(k).ReadObj();
             innername = obj.GetName()
             if (obj.ClassName() == "TCanvas"):
                 for p in obj.GetListOfPrimitives():
-                    if (p.ClassName() == "TH2F"):
+                    if (p.ClassName() == "TH2F" and not tableDone):
                         makeTable(p, name+".txt")
-                        
+                        tableDone = True
+                obj.Draw()
+                plotname = innername + ".png"
+                obj.SaveAs(plotname)
 
     if(not options.cc):
         ROOT.gDirectory.cd("../")

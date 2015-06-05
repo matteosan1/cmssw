@@ -49,7 +49,7 @@ private:
   virtual void produce(edm::Event&, const edm::EventSetup&) override;
   
   std::vector<std::string> filterNames_;
-  edm::EDGetTokenT<TCollection> inputs_;
+  edm::EDGetTokenT<TRefVector> inputs_;
   //edm::EDGetTokenT<edm::View<l1extra::L1EmParticle>> l1iso_;
   //edm::EDGetTokenT<edm::View<l1extra::L1EmParticle>> l1noniso_;
   edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
@@ -66,7 +66,7 @@ private:
 template <class T>
 MiniAODTriggerCandProducer<T>::MiniAODTriggerCandProducer(const edm::ParameterSet& iConfig ):
   filterNames_(iConfig.getParameter<std::vector<std::string> >("filterNames")),
-  inputs_(consumes<TCollection>(iConfig.getParameter<edm::InputTag>("inputs"))),
+  inputs_(consumes<TRefVector>(iConfig.getParameter<edm::InputTag>("inputs"))),
   //l1iso_(consumes<edm::View<l1extra::L1EmParticle>>(iConfig.getParameter<edm::InputTag>("l1Iso"))),
   //l1noniso_(consumes<edm::View<l1extra::L1EmParticle>>(iConfig.getParameter<edm::InputTag>("l1NonIso"))),
   triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
@@ -97,7 +97,8 @@ void MiniAODTriggerCandProducer<T>::produce(edm::Event &iEvent, const edm::Event
   edm::Handle<edm::TriggerResults> triggerBits;
   edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
   
-  edm::Handle<TCollection> inputs;
+  //edm::Handle<TCollection> inputs;
+  edm::Handle<TRefVector> inputs;
 
   iEvent.getByToken(triggerBits_, triggerBits);
   iEvent.getByToken(triggerObjects_, triggerObjects);
@@ -119,7 +120,7 @@ void MiniAODTriggerCandProducer<T>::produce(edm::Event &iEvent, const edm::Event
   
   for (size_t i=0; i<inputs->size(); i++) {
     bool saveObj = true;
-    TRef ref(inputs, i);
+    TRef ref = (*inputs)[i];
     for (size_t f=0; f<filterNames_.size(); f++) {
       if (onlineOfflineMatching(triggerNames, triggerObjects, ref, filterNames_[f], dRMatch_)) {
 	if (!isAND_) {
