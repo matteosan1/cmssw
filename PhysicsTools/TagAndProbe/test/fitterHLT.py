@@ -57,7 +57,7 @@ EfficiencyBinningSpecificationMC = cms.PSet(
 if isMC:
     mcTruthModules = cms.PSet(
         MCtruth_Medium = cms.PSet(EfficiencyBinningSpecificationMC,
-                                  EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
+                                  EfficiencyCategoryAndState = cms.vstring("passingTrigger", "pass"),
                                   ),
         )
 else:
@@ -69,36 +69,36 @@ else:
 ############################################################################################
 ############################################################################################
 
-process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
-                                         InputFileNames = cms.vstring(InputFileName),
-                                         InputDirectoryName = cms.string("GsfElectronToRECO"),
-                                         InputTreeName = cms.string("fitter_tree"), 
-                                         OutputFileName = cms.string(OutputFilePrefix+"GsfElectronToId.root"),
-                                         NumCPU = cms.uint32(8),
-                                         SaveWorkspace = cms.bool(True),
-                                         floatShapeParameters = cms.bool(True),
-                                         binnedFit = cms.bool(True),
-                                         binsForFit = cms.uint32(30),
-                                         #WeightVariable = cms.string("weight"),
-                                         #fixVars = cms.vstring("mean"),
-                                                 
-                                         # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
-                                         Variables = cms.PSet(mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
-                                                              probe_sc_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
-                                                              probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""),                
-                                                              ),
-
-                                         # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
-                                         Categories = cms.PSet(mcTrue = cms.vstring("MC true", "dummy[true=1,false=0]"),
-                                                               #probe_passConvRej = cms.vstring("probe_passConvRej", "dummy[pass=1,fail=0]"), 
-                                                               passingMedium = cms.vstring("passingMedium", "dummy[pass=1,fail=0]"),
+process.GsfElectronToHLT = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
+                                          InputFileNames = cms.vstring(InputFileName),
+                                          InputDirectoryName = cms.string("GsfElectronToTrigger"),
+                                          InputTreeName = cms.string("fitter_tree"),
+                                          OutputFileName = cms.string(OutputFilePrefix+"GsfElectronToHLT.root"),
+                                          NumCPU = cms.uint32(8),
+                                          SaveWorkspace = cms.bool(True),
+                                          floatShapeParameters = cms.bool(True),
+                                          binnedFit = cms.bool(True),
+                                          binsForFit = cms.uint32(30),
+                                          #WeightVariable = cms.string("weight"),
+                                          #fixVars = cms.vstring("mean"),
+                                          
+                                          # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
+                                          Variables = cms.PSet(mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
+                                                               probe_sc_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
+                                                               probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""),                
                                                                ),
-
-                                         # defines all the PDFs that will be available for the efficiency calculations; 
-                                         # uses RooFit's "factory" syntax;
-                                         # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
-                                         # and "signalFractionInPassing[0.9]" are used for initial values  
-                                         PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
+                                          
+                                          # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
+                                          Categories = cms.PSet(mcTrue = cms.vstring("MC true", "dummy[true=1,false=0]"),
+                                                                #probe_passConvRej = cms.vstring("probe_passConvRej", "dummy[pass=1,fail=0]"), 
+                                                                passingMedium = cms.vstring("passingTrigger", "dummy[pass=1,fail=0]"),
+                                                                ),
+                                          
+                                          # defines all the PDFs that will be available for the efficiency calculations; 
+                                          # uses RooFit's "factory" syntax;
+                                          # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
+                                          # and "signalFractionInPassing[0.9]" are used for initial values  
+                                          PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
             "RooCBExGaussShape::signalResPass(mass, meanP[0, -5., 5.], sigmaP[1., 0., 5.],alphaP[0.01, 0, 5], nP[.6,0, 1], sigmaP_2[2, 0, 2.], fracP[6e-01,0, 1])",
             "RooCBExGaussShape::signalResFail(mass, meanF[0., -5., 5.], sigmaF[1., 0., 5.],alphaF[0.01, 0, 5], nF[.6, 0,1], sigmaF_2[2, 0, 2.], fracF[6e-01, 0, 1])",
             "ZGeneratorLineShape::signalPhy(mass)", ### NLO line shape
@@ -109,18 +109,18 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
             "efficiency[0.5,0,1]",
             "signalFractionInPassing[1.0]"     
             ),
-                                                         ),
-
+                                                          ),
+                                          
                                          # defines a set of efficiency calculations, what PDF to use for fitting and how to bin the data;
-                                         # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
-                                         Efficiencies = cms.PSet(mcTruthModules,
+                                          # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
+                                          Efficiencies = cms.PSet(mcTruthModules,
                                                                  #the name of the parameter set becomes the name of the directory
-                                                                 Medium = cms.PSet(EfficiencyBinningSpecification,
-                                                                                   EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
-                                                                                   ),
-                                                                 )
-                                         )
+                                                                  Medium = cms.PSet(EfficiencyBinningSpecification,
+                                                                                    EfficiencyCategoryAndState = cms.vstring("passingTrigger", "pass"),
+                                                                                    ),
+                                                                  )
+                                          )
 
 process.fit = cms.Path(
-    process.GsfElectronToId  
+    process.GsfElectronToHLT
     )

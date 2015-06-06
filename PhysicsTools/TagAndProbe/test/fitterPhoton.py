@@ -77,9 +77,9 @@ process.PhotonToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                     NumCPU = cms.uint32(8),
                                     SaveWorkspace = cms.bool(True),
                                     floatShapeParameters = cms.bool(True),
-                                    binnedFit = cms.bool(True),
-                                    binsForFit = cms.uint32(30),
-                                    WeightVariable = cms.string("PUweight"),
+                                    binnedFit = cms.bool(False),
+                                    binsForFit = cms.uint32(60),
+                                    #WeightVariable = cms.string("PUweight"),
                                     #fixVars = cms.vstring("mean"),
                                     
                                     # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
@@ -99,8 +99,10 @@ process.PhotonToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                     # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
                                     # and "signalFractionInPassing[0.9]" are used for initial values  
                                     PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
-            "RooCBExGaussShape::signalResPass(mass, meanP[0, -5., 5.], sigmaP[1.5, 1.4, 5.],alphaP[0.01, 0, 5], nP[.6, 0, 2], sigmaP_2[2, 1., 4.], fracP[0.6,0, 1])",
-            "RooCBExGaussShape::signalResFail(mass, meanF[0., -5., 5.], sigmaF[1.5, 1.4, 5.],alphaF[0.01, 0, 5], nF[.6, 0, 2], sigmaF_2[2, 1., 4.], fracF[0.6, 0, 1])",
+            "RooCBExGaussShape::signalResPass(mass, meanP[0, -5., 5.], sigmaP[1.5, 1., 50.],alphaP[0.01, 0, 5], nP[.6, 0, 20], sigmaP_2[2, 1., 40.], fracP[0.6,0, 1])",
+            "RooCBExGaussShape::signalResFail(mass, meanF[0., -5., 5.], sigmaF[1.5, 1., 50.],alphaF[0.01, 0, 5], nF[.6, 0, 20], sigmaF_2[2, 1., 40.], fracF[0.6, 0, 1])",
+            #"RooCBExGaussShape::signalPass(mass, meanP[90, 85., 95.], sigmaP[1.5, 1.4, 50.],alphaP[0.01, 0, 5], nP[.6, 0, 20], sigmaP_2[2, 1., 40.], fracP[0.6,0, 1])",
+            #"RooCBExGaussShape::signalFail(mass, meanF[90., 85., 95.], sigmaF[1.5, 1.4, 50.],alphaF[0.01, 0, 5], nF[.6, 0, 20], sigmaF_2[2, 1., 40.], fracF[0.6, 0, 1])",
             "ZGeneratorLineShape::signalPhy(mass)", ### NLO line shape
             "RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], betaPass, peakPass[90.0])",
             "RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], betaFail, peakFail[90.0])",

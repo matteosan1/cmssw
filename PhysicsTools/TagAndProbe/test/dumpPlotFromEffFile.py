@@ -27,8 +27,6 @@ def makeTable(h, tablefilename):
 
 def main(options):
 
-    isMCTruth = False   
-
     print "##################################################   "
     if(options.cc):
         print "Plotting efficiency from cut & count. No background subtraction performed !"
@@ -48,9 +46,9 @@ def main(options):
 
         if (not obj.IsA().InheritsFrom("TDirectory")):
             continue
-        if (not isMCTruth and "MCtruth" in name):
+        if (not options.isMCTruth and "MCtruth" in name):
             continue
-        if (isMCTruth and not "MCtruth" in name):
+        if (options.isMCTruth and not "MCtruth" in name):
             continue
 
         print  "   ==================================================   "
@@ -105,6 +103,7 @@ if (__name__ == "__main__"):
     parser.add_option("-d", "--directory", default="GsfElectronToRECO", help="Directory with workspace")
     parser.add_option("-c", dest="cc", action="store_true", help="Is simple Cut and Count", default=False)
     parser.add_option("-b", dest="batch", action="store_true", help="ROOT batch mode", default=False)
+    parser.add_option("-m", "--mc", dest="isMCTruth", action="store_true", default="Medium", help="Subdirectory with results", default=False)
 
     (options, arg) = parser.parse_args()
 

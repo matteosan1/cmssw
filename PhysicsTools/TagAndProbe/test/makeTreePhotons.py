@@ -239,7 +239,7 @@ ProbeVariablesToStore = cms.PSet(
     probe_Pho_abseta = cms.string("abs(eta)"),
     probe_Pho_et     = cms.string("et"),
     probe_Pho_e      = cms.string("energy"),
-
+    probe_Pho_sieie  = cms.string("full5x5_sigmaIetaIeta"),
 ## super cluster quantities
     probe_sc_energy = cms.string("superCluster.energy"),
     probe_sc_et     = cms.string("superCluster.energy*sin(superCluster.position.theta)"),    

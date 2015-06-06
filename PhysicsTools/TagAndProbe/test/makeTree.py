@@ -181,7 +181,7 @@ process.goodElectronsProbeHLT = cms.EDProducer("PatElectronTriggerCandProducer",
 
 process.goodElectronsProbeMeasureHLT = cms.EDProducer("PatElectronTriggerCandProducer",
                                                       filterNames = options['TnPHLTProbeFilters'],
-                                                      inputs      = cms.InputTag("goodElectronsPROBECutBasedVeto"),
+                                                      inputs      = cms.InputTag("goodElectrons"),#PROBECutBasedVeto"),
                                                       bits        = cms.InputTag('TriggerResults::HLT'),
                                                       objects     = cms.InputTag('selectedPatTrigger'),
                                                       dR          = cms.double(0.3),
