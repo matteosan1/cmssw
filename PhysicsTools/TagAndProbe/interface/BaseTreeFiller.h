@@ -184,7 +184,7 @@ class BaseTreeFiller : boost::noncopyable {
 
         /// Add branches with event variables: met, sum ET, .. etc.
 	bool addEventVariablesInfo_;
-
+	bool saveBeamSpot_;
         void addBranches_(TTree *tree, const edm::ParameterSet &iConfig, edm::ConsumesCollector & iC, const std::string &branchNamePrefix="") ;
 
         //implementation notice: these two are 'mutable' because we will fill them from a 'const' method

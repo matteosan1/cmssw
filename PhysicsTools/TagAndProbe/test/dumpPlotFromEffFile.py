@@ -40,15 +40,18 @@ def main(options):
     f.cd(options.directory)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
-    for k in  keyList:
+    print keyList
+    for k in keyList:
+
+        if (not options.isMCTruth and "MCtruth" in k):
+            continue
+        if (options.isMCTruth and not "MCtruth" in k):
+            continue        
+
         obj = ROOT.gDirectory.GetKey(k).ReadObj();
         name = obj.GetName()
 
         if (not obj.IsA().InheritsFrom("TDirectory")):
-            continue
-        if (not options.isMCTruth and "MCtruth" in name):
-            continue
-        if (options.isMCTruth and not "MCtruth" in name):
             continue
 
         print  "   ==================================================   "
@@ -69,6 +72,7 @@ def main(options):
                         makeTable(p, name+".txt")
                         tableDone = True
                 obj.Draw()
+                innername = innername.replace("&", "")            
                 plotname = innername + ".png"
                 obj.SaveAs(plotname)
 
@@ -84,8 +88,9 @@ def main(options):
             c = ROOT.gDirectory.Get("fit_canvas")
             c.Draw()
             plotname = "fit" + name + "_" + innername + ".png"
-            plotname.replace("probe_sc_", "")
-            plotname.replace("__pdfSignalPlusBackground", "")
+            pltoname = plotname.replace("probe_sc_", "")
+            plotname = plotname.replace("&", "")
+            plotname = plotname.replace("__pdfSignalPlusBackground", "")
             c.SaveAs(plotname)
             ROOT.gDirectory.cd("../")
 
@@ -103,7 +108,7 @@ if (__name__ == "__main__"):
     parser.add_option("-d", "--directory", default="GsfElectronToRECO", help="Directory with workspace")
     parser.add_option("-c", dest="cc", action="store_true", help="Is simple Cut and Count", default=False)
     parser.add_option("-b", dest="batch", action="store_true", help="ROOT batch mode", default=False)
-    parser.add_option("-m", "--mc", dest="isMCTruth", action="store_true", default="Medium", help="Subdirectory with results", default=False)
+    parser.add_option("-m", dest="isMCTruth", action="store_true", help="Subdirectory with results", default=False)
 
     (options, arg) = parser.parse_args()
 

@@ -66,26 +66,30 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
     addEventVariablesInfo_ = iConfig.existsAs<bool>("addEventVariablesInfo") ? iConfig.getParameter<bool>("addEventVariablesInfo") : false;
     if (addEventVariablesInfo_) {
       recVtxsToken_ = iC.consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"));
-      beamSpotToken_ = iC.consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"));
-      //metToken_ = iC.consumes<std::vector<pat::MET>>(iConfig.getParameter<edm::InputTag>("met"));
-      //tcmetToken_ = iC.consumes<reco::METCollection>(edm::InputTag("tcMet"));
-      //pfmetToken_ = iC.consumes<reco::PFMETCollection>(edm::InputTag("pfMet"));
-      tree_->Branch("event_nPV"        ,&mNPV_                 ,"mNPV/I");
-      //tree_->Branch("event_met_calomet"    ,&mMET_                ,"mMET/F");
-      //tree_->Branch("event_met_calosumet"  ,&mSumET_              ,"mSumET/F");
-      //tree_->Branch("event_met_calometsignificance",&mMETSign_    ,"mMETSign/F");
-      //tree_->Branch("event_met_tcmet"    ,&mtcMET_                ,"mtcMET/F");
-      //tree_->Branch("event_met_tcsumet"  ,&mtcSumET_              ,"mtcSumET/F");
-      //tree_->Branch("event_met_tcmetsignificance",&mtcMETSign_    ,"mtcMETSign/F");
-      //tree_->Branch("event_met_pfmet"    ,&mpfMET_                ,"mpfMET/F");
-      //tree_->Branch("event_met_pfsumet"  ,&mpfSumET_              ,"mpfSumET/F");
-      //tree_->Branch("event_met_pfmetsignificance",&mpfMETSign_    ,"mpfMETSign/F");
       tree_->Branch("event_PrimaryVertex_x"  ,&mPVx_              ,"mPVx/F");
       tree_->Branch("event_PrimaryVertex_y"  ,&mPVy_              ,"mPVy/F");
       tree_->Branch("event_PrimaryVertex_z"  ,&mPVz_              ,"mPVz/F");
-      tree_->Branch("event_BeamSpot_x"       ,&mBSx_              ,"mBSx/F");
-      tree_->Branch("event_BeamSpot_y"       ,&mBSy_              ,"mBSy/F");
-      tree_->Branch("event_BeamSpot_z"       ,&mBSz_              ,"mBSz/F");
+      tree_->Branch("event_nPV"        ,&mNPV_                 ,"mNPV/I");
+
+      saveBeamSpot_ =  iConfig.existsAs<edm::InputTag>("beamSpot") ? true: false;
+      if (saveBeamSpot_) {
+	beamSpotToken_ = iC.consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"));
+	//metToken_ = iC.consumes<std::vector<pat::MET>>(iConfig.getParameter<edm::InputTag>("met"));
+	//tcmetToken_ = iC.consumes<reco::METCollection>(edm::InputTag("tcMet"));
+	//pfmetToken_ = iC.consumes<reco::PFMETCollection>(edm::InputTag("pfMet"));
+	//tree_->Branch("event_met_calomet"    ,&mMET_                ,"mMET/F");
+	//tree_->Branch("event_met_calosumet"  ,&mSumET_              ,"mSumET/F");
+	//tree_->Branch("event_met_calometsignificance",&mMETSign_    ,"mMETSign/F");
+	//tree_->Branch("event_met_tcmet"    ,&mtcMET_                ,"mtcMET/F");
+	//tree_->Branch("event_met_tcsumet"  ,&mtcSumET_              ,"mtcSumET/F");
+	//tree_->Branch("event_met_tcmetsignificance",&mtcMETSign_    ,"mtcMETSign/F");
+	//tree_->Branch("event_met_pfmet"    ,&mpfMET_                ,"mpfMET/F");
+	//tree_->Branch("event_met_pfsumet"  ,&mpfSumET_              ,"mpfSumET/F");
+	//tree_->Branch("event_met_pfmetsignificance",&mpfMETSign_    ,"mpfMETSign/F");
+	tree_->Branch("event_BeamSpot_x"       ,&mBSx_              ,"mBSx/F");
+	tree_->Branch("event_BeamSpot_y"       ,&mBSy_              ,"mBSy/F");
+	tree_->Branch("event_BeamSpot_z"       ,&mBSz_              ,"mBSz/F");
+      }
     }
 
     ignoreExceptions_ = iConfig.existsAs<bool>("ignoreExceptions") ? iConfig.getParameter<bool>("ignoreExceptions") : false;
@@ -193,12 +197,13 @@ void tnp::BaseTreeFiller::init(const edm::Event &iEvent) const {
 
 
         //////////// Beam spot //////////////
-        edm::Handle<reco::BeamSpot> beamSpot;
-        iEvent.getByToken(beamSpotToken_, beamSpot);
-        mBSx_ = beamSpot->position().X();
-        mBSy_ = beamSpot->position().Y();
-        mBSz_ = beamSpot->position().Z();
-
+	if (saveBeamSpot_) {
+	  edm::Handle<reco::BeamSpot> beamSpot;
+	  iEvent.getByToken(beamSpotToken_, beamSpot);
+	  mBSx_ = beamSpot->position().X();
+	  mBSy_ = beamSpot->position().Y();
+	  mBSz_ = beamSpot->position().Z();
+	}
 
         ////////////// CaloMET //////
         //edm::Handle<reco::CaloMETCollection> met;
