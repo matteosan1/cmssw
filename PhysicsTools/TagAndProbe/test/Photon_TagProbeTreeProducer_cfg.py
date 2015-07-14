@@ -8,13 +8,12 @@ import FWCore.ParameterSet.Config as cms
 ##                                              
 ########################
 MC_flag = False
-#GLOBAL_TAG = "GR_R_38X_V13::All"
-GLOBAL_TAG = 'GR_R_39X_V4::All'
+GLOBAL_TAG = 'GR_R_39X_V4'
 OUTPUT_FILE_NAME = "Photon_tagProbeTree.root"
 HLTPath1 = "HLT_Photon50_Cleaned_L1R_v1"
 HLTPath2 = "HLT_Photon30_Cleaned_L1R_v1"
 HLTPath3 = "HLT_Photon20_Cleaned_L1R"
-#InputTagProcess = "REDIGI36X"
+
 InputTagProcess = "HLT"
 RECOProcess = "RECO"
 JET_COLL = "ak5PFJets"
@@ -31,7 +30,7 @@ ELECTRON_CUTS = "ecalDrivenSeed==1 && (abs(superCluster.eta)<2.5) && !(1.4442<ab
 
 process = cms.Process("TagProbe")
 #stuff needed for prescales
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.GlobalTag.globaltag = GLOBAL_TAG
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
