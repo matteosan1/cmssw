@@ -125,9 +125,9 @@ process.goodPhotonsTAGCutBasedTight.selection = cms.InputTag("egmPhotonIDs:cutBa
 ##                |___/ |___/                                                |___/ 
 ###################################################################
 
-if (len(options['TnPHLTTagFilters']) != len(options['TnPHLTProbeFilters'])):
-    print "ERROR: different number of tag and probe filters, please fix it"
-    sys.exit(-1)
+#if (len(options['TnPHLTTagFilters']) != len(options['TnPHLTProbeFilters'])):
+#    print "ERROR: different number of tag and probe filters, please fix it"
+#    sys.exit(-1)
 
 process.goodPhotonsTagHLT = cms.EDProducer("PatPhotonTriggerCandProducer",
                                            filterNames = options['TnPHLTTagFilters'],

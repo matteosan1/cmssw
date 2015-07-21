@@ -158,9 +158,9 @@ process.goodElectronsTAGCutBasedTight.selection = cms.InputTag("egmGsfElectronID
 ##                |___/ |___/                                                |___/ 
 ###################################################################
 
-if (len(options['TnPHLTTagFilters']) != len(options['TnPHLTProbeFilters'])):
-    print "ERROR: different number of tag and probe filters, please fix it"
-    sys.exit(-1)
+#if (len(options['TnPHLTTagFilters']) != len(options['TnPHLTProbeFilters'])):
+#    print "ERROR: different number of tag and probe filters, please fix it"
+#    sys.exit(-1)
 
 process.goodElectronsTagHLT = cms.EDProducer("PatElectronTriggerCandProducer",
                                              filterNames = cms.vstring(options['TnPHLTTagFilters']),
