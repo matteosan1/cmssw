@@ -59,7 +59,7 @@ TagProbeFitter::TagProbeFitter(const std::vector<std::string>& inputFileNames, s
   floatShapeParameters = floatShapeParameters_;
   fixVars = fixVars_;
   weightVar = "";
-  if(!floatShapeParameters && fixVars.empty()) std::cout << "TagProbeFitter: " << "You wnat to fix some variables but do not specify them!";
+  if(!floatShapeParameters && fixVars.empty()) std::cout << "TagProbeFitter: " << "You want to fix some variables but do not specify them!";
 
   gROOT->SetStyle("Plain");
   gStyle->SetTitleFillColor(0);
@@ -188,9 +188,13 @@ string TagProbeFitter::calculateEfficiency(string dirName,const std::vector<stri
    }
  
   //now add the necessary mass and passing variables to make the unbinned RooDataSet
-  RooDataSet data("data", "data", inputTree, 
-                  dataVars,
-                  /*selExpr=*/"", /*wgtVarName=*/(weightVar.empty() ? 0 : weightVar.c_str()));
+   std::string selection = "";
+   //if (inputTree->GetEntries() > 1e6)
+   //  selection = "event%10";
+   RooDataSet data("data", "data", inputTree, 
+		   dataVars,
+		   /*selExpr=*/selection.c_str(), /*wgtVarName=*/(weightVar.empty() ? 0 : weightVar.c_str()));
+   
 
    // Now add all expressions that are computed dynamically
    for(vector<pair<pair<string,string>, pair<string, vector<string> > > >::const_iterator ev = expressionVars.begin(), eve = expressionVars.end(); ev != eve; ++ev){
@@ -416,11 +420,12 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
       // fix them
       varFixer(w,true);
       //do fit 
-      w->pdf("simPdf")->fitTo(*data, Minimizer("Minuit", "migrad"), Save(true), Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+
+      w->pdf("simPdf")->fitTo(*data, Minimizer("Minuit", "migrad"), Save(true), SumW2Error(true), Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
       //release vars
       varFixer(w,false);
       //do fit 
-      w->pdf("simPdf")->fitTo(*data, Minimizer("Minuit", "migrad"), Save(true), Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+      w->pdf("simPdf")->fitTo(*data, Minimizer("Minuit", "migrad"), Save(true), SumW2Error(true) , Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
       //save vars
       varSaver(w);
       // now we have a starting point. Fit will converge faster.
@@ -435,7 +440,7 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
     //fix vars
     varFixer(w,true);
     //do fit
-    res = w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+    res = w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), SumW2Error(true), NumCPU(numCPU), Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
   } else {
     //if(!fixVars.empty())
   
@@ -446,7 +451,7 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
     varFixer(w,false);
     
     //do fit
-    res = w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+    res = w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), SumW2Error(true), NumCPU(numCPU), Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
   }
 
   // save everything
@@ -508,7 +513,7 @@ void TagProbeFitter::createPdf(RooWorkspace* w, vector<string>& pdfCommands){
   } 
 
   // setup the simultaneous extended pdf
-  w->factory("expr::numSignalPass('efficiency*numSignalAll', efficiency, numSignalAll[10.,1e6])");
+  w->factory("expr::numSignalPass('efficiency*numSignalAll', efficiency, numSignalAll[10.,1e7])");
   w->factory("expr::numSignalFail('(1-efficiency)*numSignalAll', efficiency, numSignalAll)");
   TString sPass = "signal", sFail = "signal";
   if (w->pdf("signalPass") != 0 && w->pdf("signalFail") != 0) {
@@ -728,7 +733,7 @@ void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName
       for(RooCatType* t = (RooCatType*)catIt->Next(); t!=0; t = (RooCatType*)catIt->Next() ){
         TString catName = t->GetName();
         if(catName.Contains("NotMapped")) continue;
-        catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_&_");
+        catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_and_");
         RooDataSet* eff_bin = (RooDataSet*) myEff.reduce( Cut(TString::Format("allCats1D==%d",t->getVal())) );
         makeEfficiencyPlot1D(*eff_bin, *v1, TString::Format("%s_PLOT_%s", v1->GetName(), catName.Data()), catName, effName);
         delete eff_bin;
@@ -738,16 +743,55 @@ void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName
 }
 
 void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName){
+  // FIXME x axis error bars are strange
+  ////eff->Print();
+  //TCanvas canvas(plotName);
+  //const RooArgSet* set = eff1.get();
+  //std::cout << "MATTEO" << std::endl;
+  //std::cout << set->getSize() << std::endl;
+////eff.Print();
+////set->Print();//for (unsigned int i=0; i<set->getSize(); i++) {
+////v.Print();
+////for (int i=0; i<eff.numEntries(); i++) {
+////  eff.get(i);
+////  //std::cout << 
+////}
+  //RooRealVar* e = (RooRealVar*) set->find("efficiency");
+  //RooPlot* p = v.frame(Name(plotName), Title(plotTitle));
+  //eff1.plotOnXY(p,YVar(*e));
+  //p->SetYTitle(TString("Efficiency of ")+effName);
+  //p->SetAxisRange(0,1,"Y");
+  //p->Draw();
+  //canvas.Write();
+  //delete p;  
+
+  //dataVars.Print();
   TCanvas canvas(plotName);
   const RooArgSet* set = eff.get();
   RooRealVar* e = (RooRealVar*) set->find("efficiency");
-  RooPlot* p = v.frame(Name(plotName), Title(plotTitle));
-  eff.plotOnXY(p,YVar(*e));
-  p->SetYTitle(TString("Efficiency of ")+effName);
-  p->SetAxisRange(0,1,"Y");
-  p->Draw();
+  RooRealVar* x = (RooRealVar*) set->find(v.GetName());
+
+  Float_t xArray[eff.numEntries()];
+  Float_t yArray[eff.numEntries()];
+  Float_t erryLowArray[eff.numEntries()];
+  Float_t erryHighArray[eff.numEntries()];
+
+  TGraphAsymmErrors* g = new TGraphAsymmErrors(eff.numEntries(), xArray, yArray, 0, 0, erryLowArray, erryHighArray);
+  
+  for (int i=0; i<eff.numEntries(); i++) {
+    eff.get(i);
+    xArray[i] = x->getVal();
+    yArray[i] = e->getVal();
+    erryLowArray[i] = e->getErrorLo();
+    erryHighArray[i] = e->getErrorHi();
+  }
+  g->SetName(plotName);
+  g->SetTitle(plotTitle);
+  g->GetYaxis()->SetTitle(TString("Efficiency of ")+effName);
+  g->GetYaxis()->SetRange(0,1);
+  g->Draw("PAE");
   canvas.Write();
-  delete p;  
+  delete g;  
 }
 
 void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName){

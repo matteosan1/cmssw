@@ -1,7 +1,6 @@
 <lcgdict>
-  <class name="tagandprobe::dummy"/>
-
-  <class name="RooCBExGaussShape" ClassVersion="2">
+  <class name="RooCBExGaussShape" ClassVersion="3">
+    <version ClassVersion="3" checksum="606229016"/>
    <version ClassVersion="2" checksum="3803209248"/>
     <version ClassVersion="1" checksum="1178796923"/>
   </class>

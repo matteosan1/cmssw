@@ -1,8 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import sys
 
-from PhysicsTools.TagAndProbe.treeMakerOptionsMC_cfi import options
-#from PhysicsTools.TagAndProbe.treeMakerOptionsData_cfi import options
+from PhysicsTools.TagAndProbe.treeMakerOptionsData_cfi import options
 
 process = cms.Process("tnp")
 

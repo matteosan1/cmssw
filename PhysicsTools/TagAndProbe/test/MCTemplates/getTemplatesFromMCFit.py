@@ -12,7 +12,7 @@ def main(options):
     for k in keys:
         if ("pdfSignalPlusBackground" in k.GetName()):
             print k.GetName()
-            directory = f.Get("GsfElectronToRECO/Medium/"+k.GetName())
+            directory = f.Get(options.directory+"/"+k.GetName())
             directory.cd()
             results = directory.Get("fitresults")
             params = results.floatParsFinal()

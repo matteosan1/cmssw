@@ -8,17 +8,17 @@ ClassImp(RooCBExGaussShape)
 				      RooAbsReal& _sigma,
 				      RooAbsReal& _alpha,
 				      RooAbsReal& _n,
-				      RooAbsReal& _sigma_2,
-				      RooAbsReal& _frac
+				      RooAbsReal& _sigma_2//,
+				      //RooAbsReal& _frac
 ) :
-   RooAbsPdf(name,title), 
-   m("m","m",this,_m),
-   m0(" m0"," m0",this,_m0),
-   sigma(" sigma"," sigma",this,_sigma),
-   alpha(" alpha"," alpha",this,_alpha),
-   n(" n"," n",this,_n),
-   sigma_2(" sigma_2"," sigma_2",this,_sigma_2),
-   frac(" frac"," frac",this,_frac) 
+RooAbsPdf(name,title), 
+  m("m","m",this,_m),
+  m0(" m0"," m0",this,_m0),
+  sigma(" sigma"," sigma",this,_sigma),
+  alpha(" alpha"," alpha",this,_alpha),
+  n(" n"," n",this,_n),
+  sigma_2(" sigma_2"," sigma_2",this,_sigma_2)//,
+  //   frac(" frac"," frac",this,_frac) 
 { }
 
 RooCBExGaussShape::RooCBExGaussShape(const RooCBExGaussShape& other, const char* name):
@@ -28,8 +28,8 @@ RooCBExGaussShape::RooCBExGaussShape(const RooCBExGaussShape& other, const char*
   sigma(" sigma",this,other. sigma),
   alpha(" alpha",this,other. alpha),
   n(" n",this,other. n),
-  sigma_2(" sigma_2",this,other. sigma_2),
-  frac(" frac",this,other. frac)
+  sigma_2(" sigma_2",this,other. sigma_2)//,
+  //frac(" frac",this,other. frac)
 { }
 
 
@@ -46,8 +46,11 @@ RooCBExGaussShape::RooCBExGaussShape(const RooCBExGaussShape& other, const char*
 
    Double_t absAlpha = fabs((Double_t)alpha);
 
-   if (t >= -absAlpha) {
-     rval= frac*exp(-0.5*t*t) + (1.0-frac)*exp(-0.5*t0*t0);
+   if (t>0) {
+     rval= exp(-0.5*t0*t0);
+   }
+   else if (t > -absAlpha) {
+     rval= exp(-0.5*t*t);// + (1.0-frac)*exp(-0.5*t0*t0);frac*exp(-0.5*t*t) + (1.0-frac)*exp(-0.5*t0*t0);
    }
    else {
      Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
