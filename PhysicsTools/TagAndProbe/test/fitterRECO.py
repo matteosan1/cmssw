@@ -23,7 +23,7 @@ OutputFilePrefix = "efficiency-data-"
 PDFName = "pdfSignalPlusBackground"
 
 if isMC:
-    InputFileName = "TnPTree_mc_slim.root"
+    InputFileName = "TnPTree_mc.root"
     PDFName = "pdfSignalPlusBackground"
     OutputFilePrefix = "efficiency-mc-pt-high-"
 

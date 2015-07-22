@@ -6,7 +6,7 @@ from PhysicsTools.TagAndProbe.treeMakerOptionsData_cfi import options
 process = cms.Process("tnp")
 
 process.pileupReweightingProducer = cms.EDProducer("PileupWeightProducer",
-                                                   FirstTime = cms.untracked.bool(True)
+                                                   hardcodedWeights_ = cms.untracked.bool(True)
                                                    )
 
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')

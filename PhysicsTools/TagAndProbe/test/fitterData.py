@@ -18,8 +18,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ################################################
 
 isMC = False
-InputFileName = "TnPTree_data_slim.root"
-#OutputFilePrefix = "efficiency-data-bin0-test-"
+InputFileName = "TnPTree_data.root"
 OutputFilePrefix = "efficiency-data-bin0-tight"
 PDFName = "pdfSignalPlusBackground"
 
