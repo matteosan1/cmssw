@@ -20,7 +20,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 isMC = False
 InputFileName = "TnPTree_data_slim.root"
 #OutputFilePrefix = "efficiency-data-bin0-test-"
-OutputFilePrefix = "efficiency-data-bin0-loose"
+OutputFilePrefix = "efficiency-data-bin0-tight"
 PDFName = "pdfSignalPlusBackground"
 
 if isMC:
@@ -31,7 +31,8 @@ if isMC:
 ################################################
 #specifies the binning of parameters
 EfficiencyBins = cms.PSet(probe_sc_et = cms.vdouble( 20, 1000 ),
-                          probe_sc_abseta = cms.vdouble( 0., 1.444 ),
+                          probe_sc_abseta = cms.vdouble( 0., 1.5 ),
+                          #probe_sc_abseta = cms.vdouble( 1.5, 2.5 ),
                           )
 
 #### For data: except for HLT step
@@ -57,8 +58,8 @@ EfficiencyBinningSpecificationMC = cms.PSet(
 
 if isMC:
     mcTruthModules = cms.PSet(
-        MCtruth_Loose = cms.PSet(EfficiencyBinningSpecificationMC,
-                                  EfficiencyCategoryAndState = cms.vstring("passingLoose", "pass"),
+        MCtruth_Medium = cms.PSet(EfficiencyBinningSpecificationMC,
+                                  EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
                                   ),
         )
 else:
@@ -93,7 +94,7 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
                                          Categories = cms.PSet(mcTrue = cms.vstring("MC true", "dummy[true=1,false=0]"),
                                                                #probe_passConvRej = cms.vstring("probe_passConvRej", "dummy[pass=1,fail=0]"), 
-                                                               passingLoose = cms.vstring("passingLoose", "dummy[pass=1,fail=0]"),
+                                                               passingMedium = cms.vstring("passingMedium", "dummy[pass=1,fail=0]"),
                                                                ),
 
                                          # defines all the PDFs that will be available for the efficiency calculations; 
@@ -101,8 +102,13 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
                                          # and "signalFractionInPassing[0.9]" are used for initial values  
                                          PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
-            "RooCBExGaussShape::signalResPass(mass,meanP[0,-5.000,5.000],sigmaP[1.419,1.00,15.000],alphaP[2.192,0, 20],nP[53.08],sigmaP_2[1, 1, 15.000])",
-            "RooCBExGaussShape::signalResFail(mass,meanF[1.1,-5.000,5.000],sigmaF[1.331,0.100,15.000],alphaF[2.5e-5, 0, 20], nF[2.455],sigmaF_2[1, 1, 15.000])",
+            #"RooCBExGaussShape::signalResPass(mass,meanP[0,-5.000,5.000],sigmaP[1.419,1.00,15.000],alphaP[0.142,0, 20],nP[50.08],sigmaP_2[1, 1, 15.000])",
+            #"RooCBExGaussShape::signalResFail(mass,meanF[1.1,-5.000,5.000],sigmaF[1.331,0.100,15.000],alphaF[0.210, 0, 20], nF[4.242],sigmaF_2[1, 1, 15.000])",
+            #"RooCBExGaussShape::signalResPass(mass,meanP[0,-5.000,5.000],sigmaP[1.419,1.00,15.000],alphaP[21.558],nP[37.08],sigmaP_2[1, 1, 15.000])",
+            #"RooCBExGaussShape::signalResFail(mass,meanF[1.1,-5.000,5.000],sigmaF[1.331,0.100,15.000],alphaF[0.915], nF[7.178],sigmaF_2[1, 1, 15.000])",
+            
+            "RooCBExGaussShape::signalResPass(mass,meanP[0,-5.000,5.000],sigmaP[1.419,1.00,15.000],alphaP[0.130],nP[50.08],sigmaP_2[1, 1, 15.000])",
+            "RooCBExGaussShape::signalResFail(mass,meanF[1.1,-5.000,5.000],sigmaF[1.331,0.100,15.000],alphaF[0.284], nF[3.350],sigmaF_2[1, 1, 15.000])",
             "ZGeneratorLineShape::signalPhy(mass)", ### NLO line shape
             #"RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,120.], betaPass[0.001, 0.,1.0], gammaPass[0.001, 0.,1.0], peakPass[90.0])",
             #"RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,120.], betaFail[0.001, 0.,1.0], gammaFail[0.001, 0.,1.0], peakFail[90.0])",
@@ -119,8 +125,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
                                          Efficiencies = cms.PSet(#mcTruthModules,
                                                                  #the name of the parameter set becomes the name of the directory
-                                                                 Loose = cms.PSet(EfficiencyBinningSpecification,
-                                                                                  EfficiencyCategoryAndState = cms.vstring("passingLoose", "pass"),
+                                                                 Medium = cms.PSet(EfficiencyBinningSpecification,
+                                                                                  EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
                                                                                    ),
                                                                  )
                                          )

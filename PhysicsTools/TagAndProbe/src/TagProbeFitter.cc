@@ -784,7 +784,10 @@ void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const 
     yArray[i] = e->getVal();
     erryLowArray[i] = e->getErrorLo();
     erryHighArray[i] = e->getErrorHi();
+    //std::cout << xArray[i] << std::endl;
+    //std::cout << yArray[i] << " " << erryLowArray[i] << " " << erryHighArray[i] << std::endl;
   }
+  canvas.cd();
   g->SetName(plotName);
   g->SetTitle(plotTitle);
   g->GetYaxis()->SetTitle(TString("Efficiency of ")+effName);

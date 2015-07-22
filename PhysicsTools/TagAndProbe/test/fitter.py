@@ -25,12 +25,12 @@ PDFName = "pdfSignalPlusBackground"
 if isMC:
     InputFileName = "TnPTree_mc_slim.root"
     PDFName = "pdfSignalPlusBackground"
-    OutputFilePrefix = "efficiency-mc-loose-test"
+    OutputFilePrefix = "efficiency-mc-tight"
 
 ################################################
 #specifies the binning of parameters
 EfficiencyBins = cms.PSet(probe_sc_et = cms.vdouble( 20, 1000 ),
-                          probe_sc_abseta = cms.vdouble( 0.0, 1.566, 2.5 ),
+                          probe_sc_abseta = cms.vdouble( 0.0, 1.5, 2.5),
                           )
 
 #### For data: except for HLT step
@@ -56,8 +56,8 @@ EfficiencyBinningSpecificationMC = cms.PSet(
 
 if isMC:
     mcTruthModules = cms.PSet(
-        MCtruth_Loose = cms.PSet(EfficiencyBinningSpecificationMC,
-                                  EfficiencyCategoryAndState = cms.vstring("passingLoose", "pass"),
+        MCtruth_Tight = cms.PSet(EfficiencyBinningSpecificationMC,
+                                  EfficiencyCategoryAndState = cms.vstring("passingTight", "pass"),
                                   ),
         )
 else:
@@ -91,7 +91,7 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
 
                                          # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
                                          Categories = cms.PSet(mcTrue = cms.vstring("MC true", "dummy[true=1,false=0]"),
-                                                               passingLoose = cms.vstring("passingLoose", "dummy[pass=1,fail=0]"),
+                                                               passingTight = cms.vstring("passingTight", "dummy[pass=1,fail=0]"),
                                                                ),
 
                                          # defines all the PDFs that will be available for the efficiency calculations; 
@@ -99,8 +99,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
                                          # and "signalFractionInPassing[0.9]" are used for initial values  
                                          PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
-            "RooCBExGaussShape::signalResPass(mass,meanP[-0.0,-5.000,5.000],sigmaP[0.956,0.00,5.000],alphaP[0.999, 0.0,50.0],nP[1.405,0.000,100.000],sigmaP_2[1.000,0.500,15.00])",
-            "RooCBExGaussShape::signalResFail(mass,meanF[-0.0,-5.000,5.000],sigmaF[3.331,0.00,5.000],alphaF[1.586, 0.0,50.0],nF[2.464,0.000,100.00],sigmaF_2[1.675,0.500,2.000])",
+            "RooCBExGaussShape::signalResPass(mass,meanP[-0.0,-5.000,5.000],sigmaP[0.956,0.00,5.000],alphaP[0.999, 0.0,50.0],nP[1.405,0.000,50.000],sigmaP_2[1.000,0.500,15.00])",
+            "RooCBExGaussShape::signalResFail(mass,meanF[-0.0,-5.000,5.000],sigmaF[3.331,0.00,5.000],alphaF[1.586, 0.0,50.0],nF[0.464,0.000,20.00],sigmaF_2[1.675,0.500,2.000])",
             "ZGeneratorLineShape::signalPhy(mass)", ### NLO line shape
             "RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], gammaPass[0.1, 0, 1], peakPass[90.0])",
             "RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], gammaFail[0.1, 0, 1], peakFail[90.0])",
@@ -115,8 +115,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
                                          Efficiencies = cms.PSet(mcTruthModules,
                                                                  #the name of the parameter set becomes the name of the directory
-                                                                 Loose = cms.PSet(EfficiencyBinningSpecification,
-                                                                                  EfficiencyCategoryAndState = cms.vstring("passingLoose", "pass"),
+                                                                 Tight = cms.PSet(EfficiencyBinningSpecification,
+                                                                                  EfficiencyCategoryAndState = cms.vstring("passingTight", "pass"),
                                                                                   ),
                                                                  )
                                          )
