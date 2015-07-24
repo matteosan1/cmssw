@@ -116,6 +116,12 @@ process.goodPhotonsTAGCutBasedMedium.selection = cms.InputTag("egmPhotonIDs:cutB
 process.goodPhotonsTAGCutBasedTight = process.goodPhotonsTAGCutBasedLoose.clone()
 process.goodPhotonsTAGCutBasedTight.selection = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-tight")
 
+
+###################################################################
+## PHOTON ISOLATION
+###################################################################
+process.load("RecoEgamma/PhotonIdentification/PhotonIDValueMapProducer_cfi")
+
 ###################################################################
 ##    _____     _                         __  __       _       _     _             
 ##   |_   _| __(_) __ _  __ _  ___ _ __  |  \/  | __ _| |_ ___| |__ (_)_ __   __ _ 
@@ -151,6 +157,7 @@ process.egmPhotonIDs.physicsObjectSrc = cms.InputTag(options['PHOTON_COLL'])
 process.pho_sequence = cms.Sequence(
     process.goodPhotons +
     process.egmPhotonIDSequence +
+    process.photonIDValueMapProducer +
     process.goodPhotonsPROBECutBasedLoose +
     process.goodPhotonsPROBECutBasedMedium +
     process.goodPhotonsPROBECutBasedTight +
@@ -247,8 +254,16 @@ ProbeVariablesToStore = cms.PSet(
     probe_sc_abseta = cms.string("abs(superCluster.eta)"),
 
 #id based
-    probe_Pho_sigmaIEtaIEta = cms.string("sigmaIetaIeta"),
+    probe_Pho_sigmaIEtaIEta = cms.string("full5x5_sigmaIetaIeta"),
+    probe_Pho_ESsigma       = cms.InputTag("photonIDValueMapProducer:phoESEffSigmaRR"),
+    probe_Pho_sigmaIEtaIPhi = cms.InputTag("photonIDValueMapProducer:phoFull5x5SigmaIEtaIPhi"),
     probe_Pho_hoe           = cms.string("hadronicOverEm"),
+
+#iso
+    probe_Pho_chIso    = cms.InputTag("photonIDValueMapProducer:phoChargedIsolation"),
+    probe_Pho_neuIso   = cms.InputTag("photonIDValueMapProducer:phoNeutralHadronIsolation"),
+    probe_Pho_phoIso   = cms.InputTag("photonIDValueMapProducer:phoPhotonIsolation"),
+    probe_Pho_chWorIso = cms.InputTag("photonIDValueMapProducer:phoWorstChargedIsolation"),
 )
 
 TagVariablesToStore = cms.PSet(
@@ -347,15 +362,27 @@ process.outpath = cms.EndPath(process.out)
 if (not options['DEBUG']):
     process.outpath.remove(process.out)
 
-process.p = cms.Path(
-    process.hltHighLevel +
-    process.pho_sequence + 
-    ####process.GsfDRToNearestTau+
-    process.allTagsAndProbes +
-    process.pileupReweightingProducer +
-    process.mc_sequence +
-    process.tree_sequence
-    )
+if (options['MC_FLAG']):
+    process.p = cms.Path(
+        process.hltHighLevel +
+        process.ele_sequence + 
+        process.sc_sequence +
+        ####process.GsfDRToNearestTau+
+        process.allTagsAndProbes +
+        process.pileupReweightingProducer +
+        process.mc_sequence +
+        process.tree_sequence
+        )
+else:
+    process.p = cms.Path(
+        process.hltHighLevel +
+        process.ele_sequence + 
+        process.sc_sequence +
+        ####process.GsfDRToNearestTau+
+        process.allTagsAndProbes +
+        process.mc_sequence +
+        process.tree_sequence
+        )
 
 process.TFileService = cms.Service(
     "TFileService", fileName = cms.string(options['OUTPUT_FILE_NAME'])

@@ -119,7 +119,8 @@ switchOnVIDElectronIdProducer(process, dataFormat)
 
 # define which IDs we want to produce
 my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_PHYS14_PU20bx25_V2_cff',
-                 'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV51_cff']
+                 'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV51_cff',
+                 'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_PHYS14_PU20bx25_nonTrig_V1_cff']
                  
 
 for idmod in my_id_modules:
@@ -152,6 +153,7 @@ process.goodElectronsTAGCutBasedMedium = process.goodElectronsTAGCutBasedVeto.cl
 process.goodElectronsTAGCutBasedMedium.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-medium")
 process.goodElectronsTAGCutBasedTight = process.goodElectronsTAGCutBasedVeto.clone()
 process.goodElectronsTAGCutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-tight")
+
 
 ###################################################################
 ##    _____     _                         __  __       _       _     _             
@@ -378,7 +380,12 @@ ProbeVariablesToStore = cms.PSet(
     probe_Ele_mHits         = cms.InputTag("eleVarHelper:missinghits"),
     probe_Ele_dz            = cms.InputTag("eleVarHelper:dz"),
     probe_Ele_dxy           = cms.InputTag("eleVarHelper:dxy"),
-    probe_Ele_mva           = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Phys14NonTrigValues")
+    probe_Ele_mva           = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Phys14NonTrigValues"),
+
+#isolation
+    probe_Ele_chIso         = cms.string("pfIsolationVariables().sumChargedHadronPt"),
+    probe_Ele_phoIso        = cms.string("pfIsolationVariables().sumPhotonEt"),
+    probe_Ele_neuIso        = cms.string("pfIsolationVariables().sumNeutralHadronEt"),
 )
 
 TagVariablesToStore = cms.PSet(
