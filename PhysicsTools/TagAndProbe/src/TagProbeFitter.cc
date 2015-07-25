@@ -743,58 +743,50 @@ void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName
 }
 
 void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName){
-  // FIXME x axis error bars are strange
-  ////eff->Print();
-  //TCanvas canvas(plotName);
-  //const RooArgSet* set = eff1.get();
-  //std::cout << "MATTEO" << std::endl;
-  //std::cout << set->getSize() << std::endl;
-////eff.Print();
-////set->Print();//for (unsigned int i=0; i<set->getSize(); i++) {
-////v.Print();
-////for (int i=0; i<eff.numEntries(); i++) {
-////  eff.get(i);
-////  //std::cout << 
-////}
-  //RooRealVar* e = (RooRealVar*) set->find("efficiency");
-  //RooPlot* p = v.frame(Name(plotName), Title(plotTitle));
-  //eff1.plotOnXY(p,YVar(*e));
-  //p->SetYTitle(TString("Efficiency of ")+effName);
-  //p->SetAxisRange(0,1,"Y");
-  //p->Draw();
-  //canvas.Write();
-  //delete p;  
 
-  //dataVars.Print();
+  // FIXME x axis error bars are strange
+ 
   TCanvas canvas(plotName);
   const RooArgSet* set = eff.get();
   RooRealVar* e = (RooRealVar*) set->find("efficiency");
-  RooRealVar* x = (RooRealVar*) set->find(v.GetName());
-
-  Float_t xArray[eff.numEntries()];
-  Float_t yArray[eff.numEntries()];
-  Float_t erryLowArray[eff.numEntries()];
-  Float_t erryHighArray[eff.numEntries()];
-
-  TGraphAsymmErrors* g = new TGraphAsymmErrors(eff.numEntries(), xArray, yArray, 0, 0, erryLowArray, erryHighArray);
-  
-  for (int i=0; i<eff.numEntries(); i++) {
-    eff.get(i);
-    xArray[i] = x->getVal();
-    yArray[i] = e->getVal();
-    erryLowArray[i] = e->getErrorLo();
-    erryHighArray[i] = e->getErrorHi();
-    //std::cout << xArray[i] << std::endl;
-    //std::cout << yArray[i] << " " << erryLowArray[i] << " " << erryHighArray[i] << std::endl;
-  }
-  canvas.cd();
-  g->SetName(plotName);
-  g->SetTitle(plotTitle);
-  g->GetYaxis()->SetTitle(TString("Efficiency of ")+effName);
-  g->GetYaxis()->SetRange(0,1);
-  g->Draw("PAE");
+  RooPlot* p = v.frame(Name(plotName), Title(plotTitle));
+  eff.plotOnXY(p,YVar(*e));
+  p->SetYTitle(TString("Efficiency of ")+effName);
+  p->SetAxisRange(0,1,"Y");
+  p->Draw();
   canvas.Write();
-  delete g;  
+  delete p;  
+
+  //dataVars.Print();
+  //TCanvas canvas(plotName);
+  //const RooArgSet* set = eff.get();
+  //RooRealVar* e = (RooRealVar*) set->find("efficiency");
+  //RooRealVar* x = (RooRealVar*) set->find(v.GetName());
+  //
+  //Float_t xArray[eff.numEntries()];
+  //Float_t yArray[eff.numEntries()];
+  //Float_t erryLowArray[eff.numEntries()];
+  //Float_t erryHighArray[eff.numEntries()];
+  //
+  //TGraphAsymmErrors* g = new TGraphAsymmErrors(eff.numEntries(), xArray, yArray, 0, 0, erryLowArray, erryHighArray);
+  //
+  //for (int i=0; i<eff.numEntries(); i++) {
+  //  eff.get(i);
+  //  xArray[i] = x->getVal();
+  //  yArray[i] = e->getVal();
+  //  erryLowArray[i] = e->getErrorLo();
+  //  erryHighArray[i] = e->getErrorHi();
+  //  //std::cout << xArray[i] << std::endl;
+  //  //std::cout << yArray[i] << " " << erryLowArray[i] << " " << erryHighArray[i] << std::endl;
+  //}
+  //canvas.cd();
+  //g->SetName(plotName);
+  //g->SetTitle(plotTitle);
+  //g->GetYaxis()->SetTitle(TString("Efficiency of ")+effName);
+  //g->GetYaxis()->SetRange(0,1);
+  //g->Draw("PAE");
+  //canvas.Write();
+  //delete g;  
 }
 
 void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName){
