@@ -75,7 +75,8 @@ process.PhotonToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                     InputTreeName = cms.string("fitter_tree"),
                                     OutputFileName = cms.string(OutputFilePrefix+"PhotonToId.root"),
                                     NumCPU = cms.uint32(8),
-                                    SaveWorkspace = cms.bool(True),
+                                    SaveWorkspace = cms.bool(False),
+                                    doCutAndCount = cms.bool(False),
                                     floatShapeParameters = cms.bool(True),
                                     binnedFit = cms.bool(False),
                                     binsForFit = cms.uint32(60),
@@ -116,9 +117,9 @@ process.PhotonToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                     # defines a set of efficiency calculations, what PDF to use for fitting and how to bin the data;
                                     # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
                                     Efficiencies = cms.PSet(mcTruthModules,
-                                                            Medium = cms.PSet(EfficiencyBinningSpecification,
-                                                                              EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
-                                                                              ),
+                                                            #Medium = cms.PSet(EfficiencyBinningSpecification,
+                                                            #                  EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
+                                                            #                  ),
                                                             )
                                     )
 

@@ -29,6 +29,7 @@ TagProbeFitTreeAnalyzer::TagProbeFitTreeAnalyzer(const edm::ParameterSet& pset):
           pset.getParameter<string>("OutputFileName"),
           pset.existsAs<unsigned int>("NumCPU")?pset.getParameter<unsigned int>("NumCPU"):1,
           pset.existsAs<bool>("SaveWorkspace")?pset.getParameter<bool>("SaveWorkspace"):false,
+          pset.existsAs<bool>("doCutAndCount")?pset.getParameter<bool>("doCutAndCount"):false,
 	  pset.existsAs<bool>("floatShapeParameters")?pset.getParameter<bool>("floatShapeParameters"):true,
 	  pset.existsAs<vector<string> >("fixVars")?pset.getParameter<vector<string> >("fixVars"):vector<string>()
 	  )

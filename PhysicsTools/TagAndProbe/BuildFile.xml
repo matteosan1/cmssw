@@ -16,6 +16,8 @@
 <flags LCG_DICT_HEADER="classes.h"/>
 <flags LCG_DICT_XML="classes_def.xml"/>
 
+<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
+
 <export>
   <lib   name="1"/>
 </export>

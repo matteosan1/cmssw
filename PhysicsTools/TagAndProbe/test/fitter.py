@@ -75,7 +75,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          InputTreeName = cms.string("fitter_tree"), 
                                          OutputFileName = cms.string(OutputFilePrefix+"GsfElectronToId.root"),
                                          NumCPU = cms.uint32(1),
-                                         SaveWorkspace = cms.bool(True),
+                                         SaveWorkspace = cms.bool(False), #VERY TIME CONSUMING FOR MC
+                                         doCutAndCount = cms.bool(False),
                                          floatShapeParameters = cms.bool(True),
                                          binnedFit = cms.bool(True),
                                          binsForFit = cms.uint32(60),
@@ -115,9 +116,9 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
                                          Efficiencies = cms.PSet(mcTruthModules,
                                                                  #the name of the parameter set becomes the name of the directory
-                                                                 Tight = cms.PSet(EfficiencyBinningSpecification,
-                                                                                  EfficiencyCategoryAndState = cms.vstring("passingTight", "pass"),
-                                                                                  ),
+                                                                 #Tight = cms.PSet(EfficiencyBinningSpecification,
+                                                                 #                 EfficiencyCategoryAndState = cms.vstring("passingTight", "pass"),
+                                                                 #                 ),
                                                                  )
                                          )
 

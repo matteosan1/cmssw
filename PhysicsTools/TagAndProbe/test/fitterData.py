@@ -76,7 +76,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          InputTreeName = cms.string("fitter_tree"), 
                                          OutputFileName = cms.string(OutputFilePrefix+"GsfElectronToId.root"),
                                          NumCPU = cms.uint32(1),
-                                         SaveWorkspace = cms.bool(True),
+                                         SaveWorkspace = cms.bool(False),
+                                         doCutAndCount = cms.bool(False),
                                          floatShapeParameters = cms.bool(True),
                                          binnedFit = cms.bool(True),
                                          binsForFit = cms.uint32(60),
@@ -122,7 +123,7 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
 
                                          # defines a set of efficiency calculations, what PDF to use for fitting and how to bin the data;
                                          # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
-                                         Efficiencies = cms.PSet(#mcTruthModules,
+                                         Efficiencies = cms.PSet(
                                                                  #the name of the parameter set becomes the name of the directory
                                                                  Medium = cms.PSet(EfficiencyBinningSpecification,
                                                                                   EfficiencyCategoryAndState = cms.vstring("passingMedium", "pass"),
