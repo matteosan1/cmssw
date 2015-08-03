@@ -346,7 +346,6 @@ ZVariablesToStore = cms.PSet(
     abseta = cms.string("abs(eta)"),
     pt  = cms.string("pt"),
     mass  = cms.string("mass"),
-    weight = cms.InputTag("pileupWeights")
     )   
 
 SCProbeVariablesToStore = cms.PSet(

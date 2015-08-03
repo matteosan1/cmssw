@@ -87,7 +87,7 @@ process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                            Variables = cms.PSet(mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
                                                                 probe_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
                                                                 probe_abseta = cms.vstring("Probe #eta", "0", "2.5", ""),                
-                                                                PUweight = cms.vstring("PU weight", "0", "10", ""),                
+                                                                PUweight = cms.vstring("PU weight", "0", "100", ""),                
                                                                 ),
                                            
                                            # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
