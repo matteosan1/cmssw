@@ -13,15 +13,19 @@ public:
   ZGeneratorLineShape() {} ; 
   ZGeneratorLineShape(const char *name, const char *title,
 		      RooAbsReal& _m,
-                      //char* genfile = "/uscmst1b_scratch/lpc1/old_scratch/lpctrig/jwerner/ZeePASResConvFitter/ZeeGenLevel.root"
-                      const char* genfile = "ZeeGenLevel.root", const char* histoName= "Mass"
+                      const char* genfile = "../data/ZeeGenLevel.root", const char* histoName= "Mass"
 		      );
 
   ZGeneratorLineShape(const ZGeneratorLineShape& other, const char* name);
   inline virtual TObject* clone(const char* newname) const { return new ZGeneratorLineShape(*this,newname);}
-  inline ~ZGeneratorLineShape(){};
-  ClassDef(ZGeneratorLineShape,1)
-    Double_t evaluate() const;  
+  inline ~ZGeneratorLineShape() { 
+    //if (dataHist != NULL)
+    // delete dataHist; 
+  };
+
+  ClassDef(ZGeneratorLineShape,2)
+  Double_t evaluate() const;  
+
  protected:
   RooRealProxy m ;
   RooDataHist* dataHist;
