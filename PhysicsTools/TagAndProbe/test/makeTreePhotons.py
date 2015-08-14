@@ -365,9 +365,7 @@ if (not options['DEBUG']):
 if (options['MC_FLAG']):
     process.p = cms.Path(
         process.hltHighLevel +
-        process.ele_sequence + 
-        process.sc_sequence +
-        ####process.GsfDRToNearestTau+
+        process.pho_sequence + 
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
         process.mc_sequence +
@@ -376,9 +374,7 @@ if (options['MC_FLAG']):
 else:
     process.p = cms.Path(
         process.hltHighLevel +
-        process.ele_sequence + 
-        process.sc_sequence +
-        ####process.GsfDRToNearestTau+
+        process.pho_sequence + 
         process.allTagsAndProbes +
         process.mc_sequence +
         process.tree_sequence
