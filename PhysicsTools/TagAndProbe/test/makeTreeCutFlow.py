@@ -126,22 +126,35 @@ my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElect
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process, idmod, setupVIDElectronSelection)
 
-process.goodElectronsPROBECutBasedVeto = cms.EDProducer("PatElectronSelectorByBitMap",
+# List of cuts
+#0 MinPtCut
+#1 GsfEleSCEtaMultiRangeCut
+#2 GsfEleDEtaInCut
+#3 GsfEleDPhiInCut
+#4 GsfEleFull5x5SigmaIEtaIEtaCut
+#5 GsfEleHadronicOverEMCut
+#6 GsfEleDxyCut 
+#7 GsfEleDzCut
+#8 GsfEleEInverseMinusPInverseCut
+#9 GsfEleEffAreaPFIsoCut
+#10 GsfEleConversionVetoCut
+#11 GsfEleMissingHitsCut
+
+process.goodElectronsPROBECutBasedVeto = cms.EDProducer("PatElectronNm1Selector",
                                                         input     = cms.InputTag("goodElectrons"),
                                                         cut       = cms.string(options['ELECTRON_CUTS']),
-                                                        selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-vetoBitmap"),
-                                                        id_cut    = cms.uint32(4091)
+                                                        selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-veto"),
+                                                        #cutIndicesToMask = cms.vuint32(2, 3),
+                                                        cutNamesToMask = cms.vstring("GsfEleDEtaInCut_0", "GsfEleDPhiInCut_0")
                                                         )
 
 process.goodElectronsPROBECutBasedLoose = process.goodElectronsPROBECutBasedVeto.clone()
-process.goodElectronsPROBECutBasedLoose.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-looseBitmap")
-process.goodElectronsPROBECutBasedLoose.id_cut = cms.uint32(4091)
+process.goodElectronsPROBECutBasedLoose.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-loose")
 process.goodElectronsPROBECutBasedMedium = process.goodElectronsPROBECutBasedVeto.clone()
-process.goodElectronsPROBECutBasedMedium.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-mediumBitmap")
-process.goodElectronsPROBECutBasedMedium.id_cut = cms.uint32(4091)
+process.goodElectronsPROBECutBasedMedium.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-medium")
 process.goodElectronsPROBECutBasedTight = process.goodElectronsPROBECutBasedVeto.clone()
-process.goodElectronsPROBECutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-tightBitmap")
-process.goodElectronsPROBECutBasedTight.id_cut = cms.uint32(4091)
+process.goodElectronsPROBECutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-PHYS14-PU20bx25-V2-standalone-tight")
+
 
 process.goodElectronsTAGCutBasedVeto = cms.EDProducer("PatElectronSelectorByValueMap",
                                                       input     = cms.InputTag("goodElectrons"),

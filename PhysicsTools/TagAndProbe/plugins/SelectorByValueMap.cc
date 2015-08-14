@@ -43,8 +43,7 @@ private:
   typedef edm::RefVector<candidateCollection> candidateRefVector;
 
   void produce(edm::Event & event, edm::EventSetup const & setup);
-    
-  //edm::EDGetTokenT<candidateCollection>    token_inputs;
+
   edm::EDGetTokenT<candidateRefVector>    token_inputs;
   StringCutObjectSelector<T> candSelector;
   edm::EDGetTokenT<edm::ValueMap<selection_type> >  token_selection;
@@ -54,7 +53,6 @@ private:
   
 template <typename T, typename C>
 SelectorByValueMap<T,C>::SelectorByValueMap(edm::ParameterSet const & config) :
-  //token_inputs(consumes<candidateCollection>(config.getParameter<edm::InputTag>("input"))),
   token_inputs(consumes<candidateRefVector>(config.getParameter<edm::InputTag>("input"))),
   candSelector(config.getParameter<std::string>("cut")),
   token_selection(consumes<edm::ValueMap<selection_type> >(config.getParameter<edm::InputTag>("selection"))),
@@ -95,54 +93,6 @@ void SelectorByValueMap<T, C>::produce(edm::Event & event, const edm::EventSetup
   
   event.put(candidates);
 }
-
-template<>
-void SelectorByValueMap<pat::Electron, unsigned int>::produce(edm::Event & event, const edm::EventSetup & setup) {
-  std::auto_ptr<candidateRefVector> candidates(new candidateRefVector());
-
-  edm::Handle<candidateRefVector> h_inputs;
-  event.getByToken(token_inputs, h_inputs);
-
-  // read the selection map from the Event
-  edm::Handle<edm::ValueMap<selection_type> > h_selection;
-  event.getByToken(token_selection, h_selection);
-  edm::ValueMap<selection_type> const & selectionMap = * h_selection;
-  
-  for (unsigned int i = 0; i < h_inputs->size(); ++i) {
-
-    candidateRef ptr = (*h_inputs)[i];
-    if (candSelector(*ptr)) {
-      if ((selectionMap[ptr]&m_cut) == m_cut)
-	candidates->push_back(ptr);
-    }
-  }
-  
-  event.put(candidates);
-}
-
-template<>
-void SelectorByValueMap<pat::Photon, unsigned int>::produce(edm::Event & event, const edm::EventSetup & setup) {
-  std::auto_ptr<candidateRefVector> candidates(new candidateRefVector());
-
-  edm::Handle<candidateRefVector> h_inputs;
-  event.getByToken(token_inputs, h_inputs);
-
-  // read the selection map from the Event
-  edm::Handle<edm::ValueMap<selection_type> > h_selection;
-  event.getByToken(token_selection, h_selection);
-  edm::ValueMap<selection_type> const & selectionMap = * h_selection;
-  
-  for (unsigned int i = 0; i < h_inputs->size(); ++i) {
-
-    candidateRef ptr = (*h_inputs)[i];
-    if (candSelector(*ptr)) {
-      if ((selectionMap[ptr]&m_cut) == m_cut)
-	candidates->push_back(ptr);
-    }
-  }
-  
-  event.put(candidates);
-}
 #endif
 
 typedef SelectorByValueMap<pat::Electron, bool> PatElectronSelectorByValueMap;
@@ -150,9 +100,3 @@ DEFINE_FWK_MODULE(PatElectronSelectorByValueMap);
 
 typedef SelectorByValueMap<pat::Photon, bool> PatPhotonSelectorByValueMap;
 DEFINE_FWK_MODULE(PatPhotonSelectorByValueMap);
-
-typedef SelectorByValueMap<pat::Electron, unsigned int> PatElectronSelectorByBitMap;
-DEFINE_FWK_MODULE(PatElectronSelectorByBitMap);
-
-typedef SelectorByValueMap<pat::Photon, unsigned int> PatPhotonSelectorByBitMap;
-DEFINE_FWK_MODULE(PatPhotonSelectorByBitMap);
