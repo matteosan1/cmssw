@@ -11,7 +11,7 @@
 class TagProbeFitter {
   public:
   ///construct the fitter with the inputFileName, inputDirectoryName, inputTreeName, outputFileName and specify wether to save the workspace with data for each bin 
-  TagProbeFitter(const std::vector<std::string>& inputFileNames, std::string inputDirectoryName, std::string inputTreeName, std::string outputFileName, int numCPU = 1, bool saveWorkspace_ = false, bool floatShapeParameters = true, const std::vector<std::string>& fixVars_ = std::vector<std::string>() );
+  TagProbeFitter(const std::vector<std::string>& inputFileNames, std::string inputDirectoryName, std::string inputTreeName, std::string outputFileName, int numCPU = 1, bool saveWorkspace = false, bool docutandcount = false, bool floatShapeParameters = true, const std::vector<std::string>& fixVars_ = std::vector<std::string>() );
 
   ///destructor closes the files
   ~TagProbeFitter();
@@ -71,7 +71,7 @@ class TagProbeFitter {
 
   ///the default option wether to save the workspace for each bin
   bool saveWorkspace;
-
+  bool docutandcount_;
   ///do binned fit; 0 = automatic, 1 = yes, -1 = no. d
   int binnedFit;
 
