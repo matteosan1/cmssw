@@ -44,7 +44,8 @@ bool MiniAODTriggerCandProducer<pat::Photon>::onlineOfflineMatching(const edm::T
 template <>
 bool MiniAODTriggerCandProducer<reco::RecoEcalCandidate>::onlineOfflineMatching(const edm::TriggerNames & triggerNames, 
 										edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, 
-										edm::Ref<std::vector<reco::RecoEcalCandidate>> ref, std::string filterLabel, float dRmin) {
+										edm::Ref<std::vector<reco::RecoEcalCandidate>> ref, 
+										std::string filterLabel, float dRmin) {
 
   for (pat::TriggerObjectStandAlone obj : *triggerObjects) { 
     obj.unpackPathNames(triggerNames); 
