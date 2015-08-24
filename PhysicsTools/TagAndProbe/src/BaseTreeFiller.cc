@@ -39,16 +39,17 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
 
     // set up weights, if needed
     if (iConfig.existsAs<double>("eventWeight")) {
-        weightMode_ = Fixed;
-        weight_ = iConfig.getParameter<double>("eventWeight");
+      weightMode_ = Fixed;
+      weight_ = iConfig.getParameter<double>("eventWeight");
     } else if (iConfig.existsAs<edm::InputTag>("eventWeight")) {
-        weightMode_ = External;
-        weightSrcToken_ = iC.consumes<double>(iConfig.getParameter<edm::InputTag>("eventWeight"));
+      weightMode_ = External;
+      weightSrcToken_ = iC.consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("eventWeight"));
     } else {
-        weightMode_ = None;
+      weightMode_ = None;
     }
+    
     if (weightMode_ != None) {
-        tree_->Branch("weight", &weight_, "weight/F");
+      tree_->Branch("weight", &weight_, "weight/F");
     }
 
     storePUweight_ = iConfig.existsAs<edm::InputTag>("PUWeightSrc") ? true: false;
@@ -154,9 +155,9 @@ void tnp::BaseTreeFiller::init(const edm::Event &iEvent) const {
         it->init(iEvent);
     }
     if (weightMode_ == External) {
-        edm::Handle<double> weight;
+        edm::Handle<GenEventInfoProduct> weight;
         iEvent.getByToken(weightSrcToken_, weight);
-        weight_ = *weight;
+        weight_ = weight->weight();
     }
 
     ///// ********** Pileup weight: needed for MC re-weighting for PU ************* 
@@ -266,7 +267,9 @@ void tnp::BaseTreeFiller::fill(const reco::CandidateBaseRef &probe) const {
             it->fill(probe);
         }
     }
-    if (tree_) tree_->Fill();
+
+    if (tree_) 
+      tree_->Fill();
 }
 void tnp::BaseTreeFiller::writeProvenance(const edm::ParameterSet &pset) const {
     TList *list = tree_->GetUserInfo();

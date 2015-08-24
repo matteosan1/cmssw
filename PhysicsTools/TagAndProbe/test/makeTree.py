@@ -461,11 +461,11 @@ process.GsfElectronToTrigger = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                                                        ),                                               
                                               allProbes     = cms.InputTag("goodElectronsProbeMeasureHLT"),
                                               PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
-
                                               )
 
 if (options['MC_FLAG']):
     process.GsfElectronToTrigger.probeMatches  = cms.InputTag("McMatchHLT")
+    process.GsfElectronToTrigger.eventWeight = cms.InputTag("generator")
 
 process.GsfElectronToSC = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                          CommonStuffForSuperClusterProbe, mcTruthCommonStuff,
@@ -479,7 +479,7 @@ process.GsfElectronToSC = cms.EDAnalyzer("TagProbeFitTreeProducer",
 
 if (options['MC_FLAG']):
     process.GsfElectronToSC.probeMatches  = cms.InputTag("McMatchSC")
-
+    process.GsfElectronToSC.eventWeight = cms.InputTag("generator")
 
 process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                            mcTruthCommonStuff, CommonStuffForGsfElectronProbe,
@@ -497,6 +497,7 @@ process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
 
 if (options['MC_FLAG']):
     process.GsfElectronToRECO.probeMatches  = cms.InputTag("McMatchRECO")
+    process.GsfElectronToRECO.eventWeight = cms.InputTag("generator")
 
 process.tree_sequence = cms.Sequence()
 if (options['DOTRIGGER']):
