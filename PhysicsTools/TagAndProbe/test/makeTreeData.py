@@ -447,8 +447,6 @@ process.GsfElectronToTrigger = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                               flags         = cms.PSet(passingHLT    = cms.InputTag("goodElectronsMeasureHLT")
                                                                        ),                                               
                                               allProbes     = cms.InputTag("goodElectronsProbeMeasureHLT"),
-                                              PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
-
                                               )
 
 if (options['MC_FLAG']):
@@ -461,7 +459,6 @@ process.GsfElectronToSC = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                          flags         = cms.PSet(passingRECO   = cms.InputTag("GsfMatchedSuperClusterCands"),                                                                  
                                                                   ),                                               
                                          allProbes     = cms.InputTag("goodSuperClustersHLT"),
-                                         PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")                                        
                                          )
 
 if (options['MC_FLAG']):
@@ -478,8 +475,6 @@ process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                                                     passingTight  = cms.InputTag("goodElectronsPROBECutBasedTight"),
                                                                     ),                                               
                                            allProbes     = cms.InputTag("goodElectronsProbeHLT"),
-                                           PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
-
                                            )
 
 if (options['MC_FLAG']):

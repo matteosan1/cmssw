@@ -80,7 +80,6 @@ process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                            floatShapeParameters = cms.bool(True),
                                            binnedFit = cms.bool(True),
                                            binsForFit = cms.uint32(60),
-                                           #WeightVariable = cms.string("weight"),
                                            #fixVars = cms.vstring("mean"),
                                            
                                            # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies

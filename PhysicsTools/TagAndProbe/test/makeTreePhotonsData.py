@@ -283,7 +283,6 @@ process.PhotonToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                                                passingTight  = cms.InputTag("goodPhotonsPROBECutBasedTight"),
                                                                ),                                               
                                       allProbes     = cms.InputTag("goodPhotonsProbeHLT"),
-                                      PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
                                       )
 
 process.tree_sequence = cms.Sequence(process.PhotonToRECO)

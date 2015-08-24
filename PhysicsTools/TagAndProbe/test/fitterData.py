@@ -81,7 +81,6 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          floatShapeParameters = cms.bool(True),
                                          binnedFit = cms.bool(True),
                                          binsForFit = cms.uint32(60),
-                                         #WeightVariable = cms.string("weight"),
                                          #fixVars = cms.vstring("meanP", "meanF", "sigmaP", "sigmaF", "sigmaP_2", "sigmaF_2"),
                                          
                                          # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies

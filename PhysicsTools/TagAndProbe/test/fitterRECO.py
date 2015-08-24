@@ -31,12 +31,13 @@ if isMC:
 #specifies the binning of parameters
 EfficiencyBins = cms.PSet(probe_et = cms.vdouble(20, 1000 ),
                           probe_abseta = cms.vdouble(0, 1.5, 2.5)
+                          totWeight = cms.vdouble(0, 1000000.0)
                           )
 
 #### For data: except for HLT step
 EfficiencyBinningSpecification = cms.PSet(
     #specifies what unbinned variables to include in the dataset, the mass is needed for the fit
-    UnbinnedVariables = cms.vstring("mass", "PUweight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight"),
     #specifies the binning of parameters
     BinnedVariables = cms.PSet(EfficiencyBins),
     #first string is the default followed by binRegExp - PDFname pairs
@@ -45,7 +46,7 @@ EfficiencyBinningSpecification = cms.PSet(
 
 #### For MC truth: do truth matching
 EfficiencyBinningSpecificationMC = cms.PSet(
-    UnbinnedVariables = cms.vstring("mass", "PUweight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight"),
     BinnedVariables = cms.PSet(EfficiencyBins,
                                mcTrue = cms.vstring("true")
                                ),
@@ -80,14 +81,14 @@ process.GsfElectronToRECO = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                            floatShapeParameters = cms.bool(True),
                                            binnedFit = cms.bool(True),
                                            binsForFit = cms.uint32(60),
-                                           WeightVariable = cms.string("PUweight"),
+                                           WeightVariable = cms.string("totWeight"),
                                            #fixVars = cms.vstring("mean"),
                                            
                                            # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
                                            Variables = cms.PSet(mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
                                                                 probe_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
                                                                 probe_abseta = cms.vstring("Probe #eta", "0", "2.5", ""),                
-                                                                PUweight = cms.vstring("PU weight", "0", "100", ""),                
+                                                                totWeight = cms.vstring("totWeight", "0", "10000000", ""),                
                                                                 ),
                                            
                                            # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations

@@ -337,11 +337,12 @@ process.PhotonToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                                                passingTight  = cms.InputTag("goodPhotonsPROBECutBasedTight"),
                                                                ),                                               
                                       allProbes     = cms.InputTag("goodPhotonsProbeHLT"),
-                                      PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
                                       )
 
 if (options['MC_FLAG']):
     process.PhotonToRECO.probeMatches  = cms.InputTag("McMatchRECO")
+    process.PhotonToRECO.eventWeight   = cms.InputTag("generator")
+    process.PhotonToRECO.PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
 
 process.tree_sequence = cms.Sequence(process.PhotonToRECO)
 
