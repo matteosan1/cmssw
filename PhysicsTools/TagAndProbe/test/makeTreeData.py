@@ -91,7 +91,6 @@ process.goodSuperClusters = cms.EDFilter("RecoEcalCandidateRefSelector",
 process.GsfMatchedSuperClusterCands = cms.EDProducer("ElectronMatchedCandidateProducer",
                                                      src     = cms.InputTag("superClusterCands"),
                                                      ReferenceElectronCollection = cms.untracked.InputTag("goodElectrons"),
-                                                     deltaR =  cms.untracked.double(0.3),
                                                      cut = cms.string(options['SUPERCLUSTER_CUTS'])
                                                      )
 
