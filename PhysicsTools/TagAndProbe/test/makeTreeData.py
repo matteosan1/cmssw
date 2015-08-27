@@ -9,6 +9,11 @@ process.pileupReweightingProducer = cms.EDProducer("PileupWeightProducer",
                                                    hardcodedWeights_ = cms.untracked.bool(True)
                                                    )
 
+process.eleVarHelper = cms.EDProducer("ElectronVariableHelper",
+                                      probes = cms.InputTag(options['ELECTRON_COLL']),
+                                      vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices")
+)
+
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
 process.hltHighLevel.throw = cms.bool(True)
 process.hltHighLevel.HLTPaths = options['TnPPATHS']
@@ -370,7 +375,8 @@ ProbeVariablesToStore = cms.PSet(
     probe_Ele_sigmaIEtaIEta = cms.string("sigmaIetaIeta"),
     probe_Ele_hoe           = cms.string("hadronicOverEm"),
     probe_Ele_ooemoop       = cms.string("(1.0/ecalEnergy - eSuperClusterOverP/ecalEnergy)"),
-    #probe_Ele_mHits         = cms.string("gsfTrack.trackerExpectedHitsInner.numberOfHits")
+    #probe_Ele_mHits         = cms.string("gsfTrack.trackerExpectedHitsInner.numberOfHits"),
+    probe_Ele_l1et          = cms.InputTag("eleVarHelper:l1et"),
 )
 
 TagVariablesToStore = cms.PSet(
@@ -515,6 +521,7 @@ if (options['MC_FLAG']):
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
         process.mc_sequence +
+        process.eleVarHelper + 
         process.tree_sequence
         )
 else:
@@ -525,6 +532,7 @@ else:
         ####process.GsfDRToNearestTau+
         process.allTagsAndProbes +
         process.mc_sequence +
+        process.eleVarHelper + 
         process.tree_sequence
         )
 

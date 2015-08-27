@@ -13,6 +13,11 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
+#include "DataFormats/L1Trigger/interface/L1EmParticle.h"
+#include "DataFormats/L1Trigger/interface/L1EmParticleFwd.h"
+
+#include "DataFormats/Math/interface/deltaR.h"
+
 class ElectronVariableHelper : public edm::EDProducer {
 public:
   explicit ElectronVariableHelper(const edm::ParameterSet & iConfig);
@@ -23,15 +28,20 @@ public:
 private:
   edm::EDGetTokenT<std::vector<pat::Electron> > probesToken_;
   edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
+  edm::EDGetTokenT<l1extra::L1EmParticleCollection> l1NonIsoToken_;
+  edm::EDGetTokenT<l1extra::L1EmParticleCollection> l1IsoToken_;
 };
 
 ElectronVariableHelper::ElectronVariableHelper(const edm::ParameterSet & iConfig) :
   probesToken_(consumes<std::vector<pat::Electron> >(iConfig.getParameter<edm::InputTag>("probes"))),
-  vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"))) {
-
+  vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexCollection"))),
+  l1NonIsoToken_(consumes<l1extra::L1EmParticleCollection>(edm::InputTag("l1extraParticles:NonIsolated"))),
+  l1IsoToken_(consumes<l1extra::L1EmParticleCollection>(edm::InputTag("l1extraParticles:Isolated")))
+{
   produces<edm::ValueMap<float> >("dz");
   produces<edm::ValueMap<float> >("dxy");
   produces<edm::ValueMap<float> >("missinghits");
+  produces<edm::ValueMap<float> >("l1et");
 }
 
 ElectronVariableHelper::~ElectronVariableHelper()
@@ -42,25 +52,51 @@ void ElectronVariableHelper::produce(edm::Event & iEvent, const edm::EventSetup 
   // read input
   edm::Handle<std::vector<pat::Electron> > probes;
   edm::Handle<reco::VertexCollection> vtxH;
-
+  edm::Handle<std::vector<l1extra::L1EmParticle> > l1NonIsoH, l1IsoH;
+  
   iEvent.getByToken(probesToken_,  probes);
   iEvent.getByToken(vtxToken_, vtxH);
   const reco::VertexRef vtx(vtxH, 0);
+  iEvent.getByToken(l1NonIsoToken_, l1NonIsoH);
+  const l1extra::L1EmParticleCollection* l1NonIso = l1NonIsoH.product();
+  iEvent.getByToken(l1IsoToken_, l1IsoH);
+  const l1extra::L1EmParticleCollection* l1Iso = l1IsoH.product();
 
   // prepare vector for output
   std::vector<float> dzValues;
   std::vector<float> dxyValues;
   std::vector<float> mhValues;
+  std::vector<float> l1Values;
 
   std::vector<pat::Electron>::const_iterator probe, endprobes = probes->end();
-  //const std::vector<pat::Electron>* electronCollection = elHandle.product();
-  //reco::GsfElectronCollection::const_iterator eleIt = electronCollection->begin();
 
   for (probe = probes->begin(); probe != endprobes; ++probe) {
     
     dzValues.push_back(probe->gsfTrack()->dz(vtx->position()));
     dxyValues.push_back(probe->gsfTrack()->dxy(vtx->position()));
     mhValues.push_back(float(probe->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS)));
+    
+    float l1et = -1;
+    float dRmin = 99999;
+    for (l1extra::L1EmParticleCollection::const_iterator l1It = l1Iso->begin(); l1It != l1Iso->end(); l1It++) {
+      float dR = deltaR(*l1It, *(probe->superCluster()));
+      if (dR < dRmin) {
+	dRmin = dR;
+	l1et = l1It->et();
+      }
+    }
+     
+    if (l1et < 0) {
+      for (l1extra::L1EmParticleCollection::const_iterator l1It = l1NonIso->begin(); l1It != l1NonIso->end(); l1It++) {
+	float dR = deltaR(*l1It, *(probe->superCluster()));
+	if (dR < dRmin) {
+	  dRmin = dR;
+	  l1et = l1It->et();
+	}
+      }
+    }
+    
+    l1Values.push_back(l1et);
   }
 
   
@@ -82,6 +118,12 @@ void ElectronVariableHelper::produce(edm::Event & iEvent, const edm::EventSetup 
   mhFiller.insert(probes, mhValues.begin(), mhValues.end());
   mhFiller.fill();
   iEvent.put(mhValMap, "missinghits");
+
+  std::auto_ptr<edm::ValueMap<float> > l1ValMap(new edm::ValueMap<float>());
+  edm::ValueMap<float>::Filler l1Filler(*l1ValMap);
+  l1Filler.insert(probes, l1Values.begin(), l1Values.end());
+  l1Filler.fill();
+  iEvent.put(l1ValMap, "l1et");
 }
 
 
