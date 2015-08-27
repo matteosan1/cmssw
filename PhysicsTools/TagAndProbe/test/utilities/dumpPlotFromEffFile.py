@@ -47,7 +47,8 @@ def main(options):
             continue
         if (options.isMCTruth and not "MCtruth" in k):
             continue        
-
+        
+        print k
         obj = ROOT.gDirectory.GetKey(k).ReadObj();
         name = obj.GetName()
 
@@ -76,30 +77,30 @@ def main(options):
                 plotname = innername + ".png"
                 obj.SaveAs(plotname)
 
-    if(not options.cc):
-        ROOT.gDirectory.cd("../")
-        keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
-        for k in  keyList:
-            obj = ROOT.gDirectory.GetKey(k).ReadObj();
-            innername = obj.GetName()
-            if (not obj.IsA().InheritsFrom("TDirectory") or not "_bin" in innername):
-                continue
-            ROOT.gDirectory.cd(innername)
-            c = ROOT.gDirectory.Get("fit_canvas")
-            c.Draw()
-            plotname = "fit" + name + "_" + innername + ".png"
-            pltoname = plotname.replace("probe_sc_", "")
-            plotname = plotname.replace("&", "")
-            plotname = plotname.replace("__pdfSignalPlusBackground", "")
-            c.SaveAs(plotname)
+        if(not options.cc):
             ROOT.gDirectory.cd("../")
+            keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
+            for k in  keyList:
+                obj = ROOT.gDirectory.GetKey(k).ReadObj();
+                innername = obj.GetName()
+                if (not obj.IsA().InheritsFrom("TDirectory") or not "_bin" in innername):
+                    continue
+                ROOT.gDirectory.cd(innername)
+                c = ROOT.gDirectory.Get("fit_canvas")
+                c.Draw()
+                plotname = "fit" + name + "_" + innername + ".png"
+                pltoname = plotname.replace("probe_sc_", "")
+                plotname = plotname.replace("&", "")
+                plotname = plotname.replace("__pdfSignalPlusBackground", "")
+                c.SaveAs(plotname)
+                ROOT.gDirectory.cd("../")
 
-    if(not options.cc): 
-        ROOT.gDirectory.cd("../")
-    else:
-        ROOT.gDirectory.cd("../../")
+        if(not options.cc): 
+            ROOT.gDirectory.cd("../")
+        else:
+            ROOT.gDirectory.cd("../../")
 
-    print "   ==================================================   "
+        print "   ==================================================   "
 
 
 if (__name__ == "__main__"):
