@@ -37,7 +37,7 @@ def main(options):
             histos[hp] = ROOT.TH1D(hp, hp, 120, 60, 120)
             histos[hf] = ROOT.TH1D(hf, hf, 120, 60, 120)
             
-            binning = "pair_mass60to120 && "+options.etVarName +">"+str(pts[binPt])+" && "+options.etVarName +"<"+str(pts[binPt+1])+" && "+options.etaVarName +">"+str(etas[binEta])+" && "+options.etaVarName +"<"+str(etas[binEta+1])            
+            binning = options.tagTauVarName+" > 0.2 && "+options.probeTauVarName+" > 0.2 && mcTrue == 1 && pair_mass60to120 && "+options.etVarName +">"+str(pts[binPt])+" && "+options.etVarName +"<"+str(pts[binPt+1])+" && "+options.etaVarName +">"+str(etas[binEta])+" && "+options.etaVarName +"<"+str(etas[binEta+1])            
             cuts = "("+binning + " && passing"+options.idprobe+"==1"+")*"+options.weightVarName
             fChain.Draw("mass>>"+histos[hp].GetName(), cuts, "goff")
             cuts = binning + " && passing"+options.idprobe+"==0"
@@ -60,6 +60,8 @@ if __name__ == "__main__":
     parser.add_option("", "--etaVarName", default="probe_sc_eta", help="Eta variable branch name")
     parser.add_option("", "--etVarName", default="probe_sc_et", help="Et variable branch name")
     parser.add_option("", "--weightVarName", default="totWeight", help="Weight variable branch name")
+    parser.add_option("", "--tagTauVarName", default="Ele_dRTau", help="Tag to tau dr variable branch name")
+    parser.add_option("", "--probeTauVarName", default="probe_dRTau", help="Tag to tau dr variable branch name")
 
     (options, arg) = parser.parse_args()
      
