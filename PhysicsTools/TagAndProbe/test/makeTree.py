@@ -14,6 +14,24 @@ process.eleVarHelper = cms.EDProducer("ElectronVariableHelper",
                                       vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices")
 )
 
+process.GsfDRToNearestTauProbe = cms.EDProducer("DeltaRNearestGenPComputer",
+                                                probes = cms.InputTag(options['ELECTRON_COLL']),
+                                                objects = cms.InputTag('prunedGenParticles'),
+                                                objectSelection = cms.string("abs(pdgId)==15"),
+                                                )
+
+process.GsfDRToNearestTauSC = cms.EDProducer("DeltaRNearestGenPComputer",
+                                             probes = cms.InputTag("superClusterCands"),
+                                             objects = cms.InputTag('prunedGenParticles'),
+                                             objectSelection = cms.string("abs(pdgId)==15"),
+                                             )
+
+process.GsfDRToNearestTauTag = cms.EDProducer("DeltaRNearestGenPComputer",
+                                              probes = cms.InputTag(options['ELECTRON_COLL']),
+                                              objects = cms.InputTag('prunedGenParticles'),
+                                              objectSelection = cms.string("abs(pdgId)==15"),
+                                              )
+
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
 process.hltHighLevel.throw = cms.bool(True)
 process.hltHighLevel.HLTPaths = options['TnPPATHS']
@@ -169,7 +187,7 @@ process.goodElectronsTAGCutBasedTight.selection = cms.InputTag("egmGsfElectronID
 
 process.goodElectronsTagHLT = cms.EDProducer("PatElectronTriggerCandProducer",
                                              filterNames = cms.vstring(options['TnPHLTTagFilters']),
-                                             inputs      = cms.InputTag("goodElectronsTAGCutBasedTight"), #options['ELECTRON_COLL']),
+                                             inputs      = cms.InputTag("goodElectronsTAGCutBasedTight"),
                                              bits        = cms.InputTag('TriggerResults::HLT'),
                                              objects     = cms.InputTag('selectedPatTrigger'),
                                              dR          = cms.double(0.3),
@@ -187,7 +205,7 @@ process.goodElectronsProbeHLT = cms.EDProducer("PatElectronTriggerCandProducer",
 
 process.goodElectronsProbeMeasureHLT = cms.EDProducer("PatElectronTriggerCandProducer",
                                                       filterNames = cms.vstring(options['TnPHLTProbeFilters']),
-                                                      inputs      = cms.InputTag("goodElectrons"),#PROBECutBasedVeto"),
+                                                      inputs      = cms.InputTag("goodElectrons"),
                                                       bits        = cms.InputTag('TriggerResults::HLT'),
                                                       objects     = cms.InputTag('selectedPatTrigger'),
                                                       dR          = cms.double(0.3),
@@ -353,6 +371,8 @@ SCProbeVariablesToStore = cms.PSet(
     probe_pt     = cms.string("pt"),
     probe_et     = cms.string("et"),
     probe_e      = cms.string("energy"),
+    
+    probe_dRTau  = cms.InputTag("GsfDRToNearestTauSC")
 )
 
 ProbeVariablesToStore = cms.PSet(
@@ -379,6 +399,7 @@ ProbeVariablesToStore = cms.PSet(
     probe_Ele_dz            = cms.InputTag("eleVarHelper:dz"),
     probe_Ele_dxy           = cms.InputTag("eleVarHelper:dxy"),
     probe_Ele_mva           = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Phys14NonTrigValues"),
+    probe_dRTau             = cms.InputTag("GsfDRToNearestTauProbe"),
 
 #isolation
     probe_Ele_chIso         = cms.string("pfIsolationVariables().sumChargedHadronPt"),
@@ -393,6 +414,7 @@ TagVariablesToStore = cms.PSet(
     Ele_et     = cms.string("et"),
     Ele_e      = cms.string("energy"),
     Ele_q      = cms.string("charge"),
+    Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag"),
     
     ## super cluster quantities
     sc_energy = cms.string("superCluster.energy"),
@@ -442,7 +464,7 @@ else:
     mcTruthCommonStuff = cms.PSet(
         isMC = cms.bool(False)
         )
-    
+
 ##########################################################################
 ##   ____      __       __    ___                 ___    _ 
 ##  / ___|___ / _|      \ \  |_ _|___  ___       |_ _|__| |
@@ -529,11 +551,13 @@ if (options['MC_FLAG']):
         process.hltHighLevel +
         process.ele_sequence + 
         process.sc_sequence +
-        ####process.GsfDRToNearestTau+
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
         process.mc_sequence +
         process.eleVarHelper +
+        process.GsfDRToNearestTauProbe + 
+        process.GsfDRToNearestTauTag + 
+        process.GsfDRToNearestTauSC + 
         process.tree_sequence
         )
 else:
@@ -541,7 +565,6 @@ else:
         process.hltHighLevel +
         process.ele_sequence + 
         process.sc_sequence +
-        ####process.GsfDRToNearestTau+
         process.allTagsAndProbes +
         process.mc_sequence +
         process.eleVarHelper +

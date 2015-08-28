@@ -10,6 +10,18 @@ process.pileupReweightingProducer = cms.EDProducer("PileupWeightProducer",
                                                    hardcodedWeights = cms.untracked.bool(True)
                                                    )
 
+process.GsfDRToNearestTauProbe = cms.EDProducer("DeltaRNearestGenPComputer",
+                                                probes = cms.InputTag(options['PHOTON_COLL']),
+                                                objects = cms.InputTag('prunedGenParticles'),
+                                                objectSelection = cms.string("abs(pdgId)==15"),
+                                                )
+
+process.GsfDRToNearestTauTag = cms.EDProducer("DeltaRNearestGenPComputer",
+                                              probes = cms.InputTag(options['PHOTON_COLL']),
+                                              objects = cms.InputTag('prunedGenParticles'),
+                                              objectSelection = cms.string("abs(pdgId)==15"),
+                                              )
+
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
 process.hltHighLevel.throw = cms.bool(True)
 process.hltHighLevel.HLTPaths = options['TnPPATHS']
@@ -263,7 +275,9 @@ ProbeVariablesToStore = cms.PSet(
     probe_Pho_chIso    = cms.InputTag("photonIDValueMapProducer:phoChargedIsolation"),
     probe_Pho_neuIso   = cms.InputTag("photonIDValueMapProducer:phoNeutralHadronIsolation"),
     probe_Pho_phoIso   = cms.InputTag("photonIDValueMapProducer:phoPhotonIsolation"),
-    probe_Pho_chWorIso = cms.InputTag("photonIDValueMapProducer:phoWorstChargedIsolation"),
+    probe_Pho_chWorIso = cms.InputTag("photonIDValueMapProducer:phoWorstChargedIsolation"), 
+    
+    probe_dRTau    = cms.InputTag("GsfDRToNearestTauProbe"),
 )
 
 TagVariablesToStore = cms.PSet(
@@ -272,6 +286,7 @@ TagVariablesToStore = cms.PSet(
     Pho_pt     = cms.string("pt"),
     Pho_et     = cms.string("et"),
     Pho_e      = cms.string("energy"),
+    Pho_dRTau  = cms.InputTag("GsfDRToNearestTauProbe"),
     
     ## super cluster quantities
     sc_energy = cms.string("superCluster.energy"),
@@ -369,7 +384,9 @@ if (options['MC_FLAG']):
         process.pho_sequence + 
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
-        process.mc_sequence +
+        process.mc_sequence + 
+        process.GsfDRToNearestTauProbe + 
+        process.GsfDRToNearestTauTag + 
         process.tree_sequence
         )
 else:

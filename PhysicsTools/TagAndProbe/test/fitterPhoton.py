@@ -36,7 +36,7 @@ EfficiencyBins = cms.PSet(probe_sc_et = cms.vdouble( 25, 40 ),
 #### For data: except for HLT step
 EfficiencyBinningSpecification = cms.PSet(
     #specifies what unbinned variables to include in the dataset, the mass is needed for the fit
-    UnbinnedVariables = cms.vstring("mass", "totWeight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight", "Pho_dRTau", "probe_dRTau")),
     #specifies the binning of parameters
     BinnedVariables = cms.PSet(EfficiencyBins),
     #first string is the default followed by binRegExp - PDFname pairs
@@ -45,7 +45,7 @@ EfficiencyBinningSpecification = cms.PSet(
 
 #### For MC truth: do truth matching
 EfficiencyBinningSpecificationMC = cms.PSet(
-    UnbinnedVariables = cms.vstring("mass", "totWeight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight", "Pho_dRTau", "probe_dRTau")),
     BinnedVariables = cms.PSet(EfficiencyBins,
                                mcTrue = cms.vstring("true")
                                ),
@@ -87,7 +87,9 @@ process.PhotonToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                     Variables = cms.PSet(mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
                                                          probe_sc_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
                                                          probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""),                
-                                                         totWeight = cms.vstring("totWeight", "0", "1000000", ""),                
+                                                         totWeight = cms.vstring("totWeight", "0", "1000000", ""), 
+                                                         Pho_dRTau = cms.vstring("Pho_dRTau", "0.2", "100000", ""),
+                                                         probe_dRTau = cms.vstring("probe_dRTau", "0.2", "100000", ""),               
                                                          ),
                                     
                                     # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations

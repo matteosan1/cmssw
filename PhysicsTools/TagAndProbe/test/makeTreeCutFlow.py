@@ -14,6 +14,23 @@ process.eleVarHelper = cms.EDProducer("ElectronVariableHelper",
                                       vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices")
 )
 
+process.GsfDRToNearestTauProbe = cms.EDProducer("DeltaRNearestGenPComputer",
+                                                probes = cms.InputTag(options['ELECTRON_COLL']),
+                                                objects = cms.InputTag('prunedGenParticles'),
+                                                objectSelection = cms.string("abs(pdgId)==15"),
+                                                )
+
+process.GsfDRToNearestTauSC = cms.EDProducer("DeltaRNearestGenPComputer",
+                                             probes = cms.InputTag("superClusterCands"),
+                                             objects = cms.InputTag('prunedGenParticles'),
+                                             objectSelection = cms.string("abs(pdgId)==15"),
+                                             )
+
+process.GsfDRToNearestTauTag = cms.EDProducer("DeltaRNearestGenPComputer",
+                                              probes = cms.InputTag(options['ELECTRON_COLL']),
+                                              objects = cms.InputTag('prunedGenParticles'),
+                                              objectSelection = cms.string("abs(pdgId)==15"),
+                                              )
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
 process.hltHighLevel.throw = cms.bool(True)
 process.hltHighLevel.HLTPaths = options['TnPPATHS']
@@ -368,7 +385,9 @@ SCProbeVariablesToStore = cms.PSet(
     probe_abseta = cms.string("abs(eta)"),
     probe_pt     = cms.string("pt"),
     probe_et     = cms.string("et"),
-    probe_e      = cms.string("energy"),
+    probe_e      = cms.string("energy"), 
+
+    probe_dRTau  = cms.InputTag("GsfDRToNearestTauSC")
 )
 
 ProbeVariablesToStore = cms.PSet(
@@ -378,6 +397,7 @@ ProbeVariablesToStore = cms.PSet(
     probe_Ele_et     = cms.string("et"),
     probe_Ele_e      = cms.string("energy"),
     probe_Ele_q      = cms.string("charge"),
+    probe_dRTau             = cms.InputTag("GsfDRToNearestTauProbe"),
 
 ## super cluster quantities
     probe_sc_energy = cms.string("superCluster.energy"),
@@ -409,7 +429,8 @@ TagVariablesToStore = cms.PSet(
     Ele_et     = cms.string("et"),
     Ele_e      = cms.string("energy"),
     Ele_q      = cms.string("charge"),
-    
+    Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag"),
+
     ## super cluster quantities
     sc_energy = cms.string("superCluster.energy"),
     sc_et     = cms.string("superCluster.energy*sin(superClusterPosition.theta)"),    
@@ -545,11 +566,14 @@ if (options['MC_FLAG']):
         process.hltHighLevel +
         process.ele_sequence + 
         process.sc_sequence +
-        ####process.GsfDRToNearestTau+
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
         process.mc_sequence +
-        process.eleVarHelper +
+        process.eleVarHelper + 
+        process.GsfDRToNearestTauProbe + 
+        process.GsfDRToNearestTauTag + 
+        process.GsfDRToNearestTauSC + 
+ 
         process.tree_sequence
         )
 else:
@@ -557,7 +581,6 @@ else:
         process.hltHighLevel +
         process.ele_sequence + 
         process.sc_sequence +
-        ####process.GsfDRToNearestTau+
         process.allTagsAndProbes +
         process.mc_sequence +
         process.eleVarHelper +

@@ -23,21 +23,20 @@ OutputFilePrefix = "efficiency-data-"
 PDFName = "pdfSignalPlusBackground"
 
 if isMC:
-    InputFileName = "TnPTree_mc.root"
+    InputFileName = "TnPTree_mc_norm.root"
     PDFName = "pdfSignalPlusBackground"
     OutputFilePrefix = "efficiency-mc-tight"
 
 ################################################
 #specifies the binning of parameters
 EfficiencyBins = cms.PSet(probe_sc_et = cms.vdouble( 20, 1000 ),
-                          probe_sc_abseta = cms.vdouble( 0.0, 1.5, 2.5),
-                          totWeight = cms.vdouble(0.0, 10000000.),
+                          probe_sc_abseta = cms.vdouble( 0.0, 1.5, 2.5), 
                           )
 
 #### For data: except for HLT step
 EfficiencyBinningSpecification = cms.PSet(
     #specifies what unbinned variables to include in the dataset, the mass is needed for the fit
-    UnbinnedVariables = cms.vstring("mass", "totWeight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight", "Ele_dRTau", "probe_dRTau"),
     #specifies the binning of parameters
     BinnedVariables = cms.PSet(EfficiencyBins),
     #first string is the default followed by binRegExp - PDFname pairs
@@ -46,7 +45,7 @@ EfficiencyBinningSpecification = cms.PSet(
 
 #### For MC truth: do truth matching
 EfficiencyBinningSpecificationMC = cms.PSet(
-    UnbinnedVariables = cms.vstring("mass", "totWeight"),
+    UnbinnedVariables = cms.vstring("mass", "totWeight", "Ele_dRTau", "probe_dRTau"),
     BinnedVariables = cms.PSet(EfficiencyBins,
                                mcTrue = cms.vstring("true")
                                ),
@@ -89,6 +88,8 @@ process.GsfElectronToId = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                                               probe_sc_et = cms.vstring("Probe E_{T}", "0", "1000", "GeV/c"),
                                                               probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""), 
                                                               totWeight = cms.vstring("totWeight", "0", "100000000", ""),
+                                                              Ele_dRTau = cms.vstring("Ele_dRTau", "0.2", "100000", ""),
+                                                              probe_dRTau = cms.vstring("probe_dRTau", "0.2", "100000", ""),
                                                               ),
 
                                          # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
