@@ -2,7 +2,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-#include "PhysicsTools/TagAndProbe/interface/ColinsSoperVariables.h"
+#include "PhysicsTools/TagAndProbe/plugins/ColinsSoperVariables.h"
 
 #include <TList.h>
 #include <TObjString.h>
