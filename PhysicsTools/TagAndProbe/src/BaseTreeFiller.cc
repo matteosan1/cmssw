@@ -31,7 +31,7 @@ void tnp::ProbeFlag::fill(const reco::CandidateBaseRef &probe) const {
 tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& iConfig, edm::ConsumesCollector & iC) {
     // make trees as requested
     edm::Service<TFileService> fs;
-    tree_ = fs->make<TTree>(name,name);
+    tree_    = fs->make<TTree>(name, name);
 
     // add the branches
     addBranches_(tree_, iConfig, iC, "");
@@ -142,7 +142,7 @@ tnp::BaseTreeFiller::addBranches_(TTree *tree, const edm::ParameterSet &iConfig,
 
 }
 
-tnp::BaseTreeFiller::~BaseTreeFiller() { }
+tnp::BaseTreeFiller::~BaseTreeFiller() {}
 
 void tnp::BaseTreeFiller::init(const edm::Event &iEvent) const {
     run_  = iEvent.id().run();

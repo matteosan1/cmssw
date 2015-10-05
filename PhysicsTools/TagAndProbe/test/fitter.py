@@ -14,7 +14,7 @@ options.register(
 
 options.register(
     "inputFileName",
-    "TnP_mc.root",
+    "TnPTree_mc.root",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Input filename"
@@ -90,7 +90,7 @@ EfficiencyBinningSpecification = cms.PSet(
     )
 
 if (not options.isMC):
-    EfficiencyBinningSpecification.UnbinnedVariables = cms.vstring("mass", "totWeight", "Ele_dRTau", "probe_dRTau")
+    EfficiencyBinningSpecification.UnbinnedVariables = cms.vstring("mass") #, "totWeight", "Ele_dRTau", "probe_dRTau")
     EfficiencyBinningSpecification.BinnedVariables = cms.PSet(EfficiencyBins)
 
 mcTruthModules = cms.PSet()
@@ -107,7 +107,7 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                          OutputFileName = cms.string(OutputFile),
                                          NumCPU = cms.uint32(1),
                                          SaveWorkspace = cms.bool(False), #VERY TIME CONSUMING FOR MC
-                                         doCutAndCount = cms.bool(False),
+                                         doCutAndCount = cms.bool(options.doCutAndCount),
                                          floatShapeParameters = cms.bool(True),
                                          binnedFit = cms.bool(True),
                                          binsForFit = cms.uint32(60),
@@ -124,9 +124,7 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                                               ),
 
                                          # defines all the discrete variables of the probes available in the input tree and intended for use in the efficiency calculations
-                                         Categories = cms.PSet(),#mcTrue = cms.vstring("MC true", "dummy[true=1,false=0]"),
-                                                               #passingTight = cms.vstring("passingTight", "dummy[pass=1,fail=0]"),
-                                                               #),
+                                         Categories = cms.PSet(),
 
                                          # defines all the PDFs that will be available for the efficiency calculations; 
                                          # uses RooFit's "factory" syntax;
@@ -144,11 +142,11 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
             "signalFractionInPassing[1.0]"     
             ),
                                                          ),
-
-                                         # defines a set of efficiency calculations, what PDF to use for fitting and how to bin the data;
-                                         # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
-                                         Efficiencies = cms.PSet(mcTruthModules)
-                                         )
+                                        
+                                        # defines a set of efficiency calculations, what PDF to use for fitting and how to bin the data;
+                                        # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
+                                        Efficiencies = cms.PSet(mcTruthModules)
+                                        )
 
 setattr(process.TnPMeasurement.Categories, options.idName, cms.vstring(options.idName, "dummy[pass=1,fail=0]"))
 setattr(process.TnPMeasurement.Categories, "mcTrue", cms.vstring("MC true", "dummy[true=1,false=0]"))
@@ -174,9 +172,6 @@ else:
                 getattr(process.TnPMeasurement.PDFs, pdf)[i] = "RooPolynomial::backgroundPass(mass, a[0.0])"
             if l.find("backgroundFail") != -1:
                 getattr(process.TnPMeasurement.PDFs, pdf)[i] = "RooPolynomial::backgroundFail(mass, a[0.0])"
-
-if (options.doCutAndCount):
-    process.TnPMeasurement.doCutAndCount = cms.bool(True)
 
 process.fit = cms.Path(
     process.TnPMeasurement  

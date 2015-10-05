@@ -13,12 +13,6 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
-//#include "DataFormats/METReco/interface/MET.h"
-//#include "DataFormats/METReco/interface/METCollection.h"
-//#include "DataFormats/METReco/interface/CaloMET.h"
-//#include "DataFormats/METReco/interface/CaloMETCollection.h"
-//#include "DataFormats/METReco/interface/PFMET.h"
-//#include "DataFormats/METReco/interface/PFMETCollection.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
@@ -31,6 +25,7 @@
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
 
 #include <TTree.h>
+#include <TH1F.h>
 #include <boost/utility.hpp>
 
 
@@ -199,7 +194,7 @@ class BaseTreeFiller : boost::noncopyable {
 	mutable float PUweight_;
 	mutable std::vector<std::string> weightsToCombine_;
 	mutable float totWeight_;
-
+	
         mutable float mPVx_,mPVy_,mPVz_,mBSx_,mBSy_,mBSz_;
 	mutable float mpfMET_,mpfSumET_,mpfPhi_;
 };

@@ -14,12 +14,12 @@ def findBins(array, var):
 
 def main(options):
     
-    pts  = []
-    for v in options.ptbins.split(","):
-        pts.append(float(v))
-    etas = []
-    for v in options.etabins.split(","):
-        etas.append(float(v))
+    var1s  = []
+    for v in options.var1Bins.split(","):
+        var1s.append(float(v))
+    var2s = []
+    for v in options.var2Bins.split(","):
+        var2s.append(float(v))
 
     inFile = ROOT.TFile(options.input)
     inFile.cd(options.directory)
@@ -28,21 +28,22 @@ def main(options):
 
     histos = dict()
 
-    for binPt in xrange(len(pts)-1):
-        for binEta in xrange(len(etas)-1):
-            print "Doing templates for "+str(pts[binPt])+"To"+str(pts[binPt+1])+"_"+str(etas[binEta])+"To"+str(etas[binEta+1]),
-            histNameSt = "hMass_"+str(pts[binPt])+"To"+str(pts[binPt+1])+"_"+str(etas[binEta])+"To"+str(etas[binEta+1])
+    for binVar1 in xrange(len(var1s)-1):
+        for binVar2 in xrange(len(var2s)-1):
+            print "Doing templates for "+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1]),
+            histNameSt = "hMass_"+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1])
             hp = histNameSt+"_Pass"
             hf = histNameSt+"_Fail"
             histos[hp] = ROOT.TH1D(hp, hp, 120, 60, 120)
             histos[hf] = ROOT.TH1D(hf, hf, 120, 60, 120)
             
-            #binning = options.tagTauVarName+" > 0.2 && "+options.probeTauVarName+" > 0.2 && mcTrue == 1 && pair_mass60to120 && "+options.etVarName +">"+str(pts[binPt])+" && "+options.etVarName +"<"+str(pts[binPt+1])+" && "+options.etaVarName +">"+str(etas[binEta])+" && "+options.etaVarName +"<"+str(etas[binEta+1])            
-            binning = "mcTrue == 1 && pair_mass60to120 && "+options.etVarName +">"+str(pts[binPt])+" && "+options.etVarName +"<"+str(pts[binPt+1])+" && "+options.etaVarName +">"+str(etas[binEta])+" && "+options.etaVarName +"<"+str(etas[binEta+1])            
-            cuts = "("+binning + " && "+options.idprobe+"==1"+")*"+options.weightVarName
+            #binning = options.tagTauVarName+" > 0.2 && "+options.probeTauVarName+" > 0.2 && mcTrue == 1 && pair_mass60to120 && "+options.etVarName +">"+str(pts[binVar1])+" && "+options.etVarName +"<"+str(pts[binVar1+1])+" && "+options.etaVarName +">"+str(etas[binVar2])+" && "+options.etaVarName +"<"+str(etas[binVar2+1])            
+            binning = "mcTrue == 1 && pair_mass60to120 && "+options.var1Name +">"+str(var1s[binVar1])+" && "+options.var1Name +"<"+str(var1s[binVar1+1])+" && "+options.var2Name +">"+str(var2s[binVar2])+" && "+options.var2Name +"<"+str(var2s[binVar2+1])            
+            cuts = "(" + binning + " && "+options.idprobe+"==1"+")*"+options.weightVarName
             fChain.Draw("mass>>"+histos[hp].GetName(), cuts, "goff")
-            cuts = binning + " && "+options.idprobe+"==0"
+            cuts = "(" + binning + " && "+options.idprobe+"==0"+")*"+options.weightVarName
             fChain.Draw("mass>>"+histos[hf].GetName(), cuts, "goff")
+
             hpassInt = histos[hp].Integral()
             hfailInt = histos[hf].Integral()
             print hpassInt, hfailInt, hpassInt/(hpassInt+hfailInt)
@@ -55,14 +56,14 @@ def main(options):
 
 if __name__ == "__main__":  
     parser = OptionParser()
-    parser.add_option("-i", "--input", default="../TnPTree_MC.root", help="Input filename")
+    parser.add_option("-i", "--input", default="../TnPTree_mc.root", help="Input filename")
     parser.add_option("-o", "--output", default="mc_templates.root", help="Output filename")
     parser.add_option("-d", "--directory", default="GsfElectronToRECO", help="Directory with fitter_tree")
-    parser.add_option("", "--idprobe", default="Medium", help="String identifying ID WP to measure")
-    parser.add_option("", "--ptbins", default="20,30,40,50,200", help="Binning to use in pT")
-    parser.add_option("", "--etabins", default="0.0,1.0,1.4442,1.566,2.0,2.5", help="Binning to use in eta")
-    parser.add_option("", "--etaVarName", default="probe_sc_eta", help="Eta variable branch name")
-    parser.add_option("", "--etVarName", default="probe_sc_et", help="Et variable branch name")
+    parser.add_option("", "--idprobe", default="passingMedium", help="String identifying ID WP to measure")
+    parser.add_option("", "--var1Bins", default="20,30,40,50,200", help="Binning to use in var1")
+    parser.add_option("", "--var2Bins", default="0.0,1.0,1.4442,1.566,2.0,2.5", help="Binning to use in var2")
+    parser.add_option("", "--var1Name", default="probe_sc_eta", help="Variable1 branch name")
+    parser.add_option("", "--var2Name", default="probe_sc_et", help="Variable2 branch name")
     parser.add_option("", "--weightVarName", default="totWeight", help="Weight variable branch name")
     parser.add_option("", "--tagTauVarName", default="Ele_dRTau", help="Tag to tau dr variable branch name")
     parser.add_option("", "--probeTauVarName", default="probe_dRTau", help="Tag to tau dr variable branch name")

@@ -13,6 +13,7 @@
 <use   name="CommonTools/Utils"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="PhysicsTools/UtilAlgos"/>
+<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
 <flags LCG_DICT_HEADER="classes.h"/>
 <flags LCG_DICT_XML="classes_def.xml"/>
 <export>

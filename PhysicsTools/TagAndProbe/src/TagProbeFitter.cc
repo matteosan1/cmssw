@@ -355,7 +355,8 @@ string TagProbeFitter::calculateEfficiency(string dirName,const std::vector<stri
    }
    
    //save the efficiency data
-   fitEfficiency.Write();
+   // REMOVED SAVING OF DATASET
+   //fitEfficiency.Write();
    gDirectory->mkdir("fit_eff_plots")->cd();
    saveEfficiencyPlots(fitEfficiency, effName, binnedVariables, mappedCategories);
    gDirectory->cd("..");
@@ -474,7 +475,6 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
   //What's wrong with this? and why don't they copy the errors!
   //efficiency = *e;
 
-  //MATTEO
   efficiency.setVal(e->getVal());
   Double_t errLo = e->getErrorLo(), errHi = e->getErrorHi();
   if (errLo == 0 && e->getVal() < 0.5) errLo = e->getMin()-e->getVal();
@@ -526,7 +526,7 @@ void TagProbeFitter::createPdf(RooWorkspace* w, vector<string>& pdfCommands){
   } 
 
   // setup the simultaneous extended pdf
-  w->factory("expr::numSignalPass('efficiency*numSignalAll', efficiency, numSignalAll[10.,10000000])");
+  w->factory("expr::numSignalPass('efficiency*numSignalAll', efficiency, numSignalAll[10.,10000000000])");
   w->factory("expr::numSignalFail('(1-efficiency)*numSignalAll', efficiency, numSignalAll)");
   TString sPass = "signal", sFail = "signal";
   if (w->pdf("signalPass") != 0 && w->pdf("signalFail") != 0) {
