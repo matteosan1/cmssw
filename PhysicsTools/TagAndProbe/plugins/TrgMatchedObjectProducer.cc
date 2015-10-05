@@ -26,9 +26,9 @@ DEFINE_FWK_MODULE( trgMatchedMETProducer );
 typedef TriggerCandProducer<reco::Candidate> trgMatchedCandidateProducer;
 DEFINE_FWK_MODULE( trgMatchedCandidateProducer );
 
-#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
-typedef TriggerCandProducer<reco::RecoEcalCandidate> trgMatchedEcalCandidateProducer;
-DEFINE_FWK_MODULE( trgMatchedEcalCandidateProducer );
+//#include "DataFormats/RecoCandidate/interface/RecoEcalCandidate.h"
+//typedef TriggerCandProducer<reco::RecoEcalCandidate> trgMatchedEcalCandidateProducer;
+//DEFINE_FWK_MODULE( trgMatchedEcalCandidateProducer );
 
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 typedef TriggerCandProducer<reco::RecoChargedCandidate> trgMatchedChargedCandidateProducer;
@@ -42,9 +42,14 @@ DEFINE_FWK_MODULE( trgMatchedIsolatedPixelTrackCandidateProducer );
 typedef TriggerCandProducer<reco::Electron> trgMatchedElectronProducer;
 DEFINE_FWK_MODULE( trgMatchedElectronProducer );
 
+#include "DataFormats/PatCandidates/interface/Electron.h"
+typedef TriggerCandProducer<pat::Electron> trgMatchedPatElectronProducer;
+DEFINE_FWK_MODULE( trgMatchedPatElectronProducer );
+
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
 typedef TriggerCandProducer< reco::SuperCluster > trgMatchedSuperClusterProducer;
 DEFINE_FWK_MODULE( trgMatchedSuperClusterProducer );
+
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 typedef TriggerCandProducer< reco::Photon > trgMatchedPhotonProducer;
 DEFINE_FWK_MODULE( trgMatchedPhotonProducer );
