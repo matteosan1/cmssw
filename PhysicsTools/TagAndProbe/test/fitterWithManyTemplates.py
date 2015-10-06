@@ -67,7 +67,7 @@ if (not options.isMC):
     OutputFile = "efficiency-data-"+options.idName
 
 if (options.outputFileName != ""):
-    OutputFile = OutputFile+"-"+outputFileName+".root"
+    OutputFile = OutputFile+"-"+options.outputFileName+".root"
 else:
     OutputFile = OutputFile+".root"
 

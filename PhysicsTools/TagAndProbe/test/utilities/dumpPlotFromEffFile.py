@@ -54,7 +54,7 @@ def main(options):
             innername = innername.replace("&", "")            
             plotname = innername + ".png"
             obj.SaveAs(plotname)
-    
+
     if (options.dumpPlots and not options.cc):
         ROOT.gDirectory.cd("../")
         keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
