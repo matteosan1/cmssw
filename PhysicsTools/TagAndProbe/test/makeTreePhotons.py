@@ -31,19 +31,19 @@ from PhysicsTools.TagAndProbe.treeMakerOptionsPhotons_cfi import *
 if (varOptions.isMC):
     options['INPUT_FILE_NAME']       = ("/store/relval/CMSSW_7_4_1/RelValZEE_13/MINIAODSIM/MCRUN2_74_V9_gensim_740pre7-v1/00000/1E35CCF8-32EC-E411-8F29-0025905A48D0.root",)
     options['OUTPUT_FILE_NAME']      = "TnPTree_mc.root"
-    options['TnPPATHS']              = cms.vstring("HLT_Ele20WP60_Ele8_Mass55_v*", "HLT_Ele25WP60_SC4_Mass55_v*")
-    options['TnPHLTTagFilters']      = cms.vstring("hltEle20WP60Ele8TrackIsoFilter", "hltEle25WP60SC4TrackIsoFilter")
-    options['TnPHLTProbeFilters']    = cms.vstring("hltEle20WP60Ele8PixelMatchUnseededFilter", "hltEle25WP60SC4EtUnseededFilter")
-    options['HLTFILTERTOMEASURE']    = cms.vstring("hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoFilter")
-    options['GLOBALTAG']             = 'MCRUN2_74_V9'
+    options['TnPPATHS']            = cms.vstring("HLT_Ele23_WP75_Gsf_v*")
+    options['TnPHLTTagFilters']    = cms.vstring("hltEle23WP75GsfTrackIsoFilter")
+    options['TnPHLTProbeFilters']  = cms.vstring()
+    options['HLTFILTERTOMEASURE']  = cms.vstring("")
+     options['GLOBALTAG']             = 'MCRUN2_74_V9'
     options['EVENTSToPROCESS']       = cms.untracked.VEventRange()
 else:
     options['INPUT_FILE_NAME']       = ("/store/relval/CMSSW_7_4_1/RelValZEE_13/MINIAODSIM/MCRUN2_74_V9_gensim_740pre7-v1/00000/1E35CCF8-32EC-E411-8F29-0025905A48D0.root")
     options['OUTPUT_FILE_NAME']      = "TnPTree_data.root"
-    options['TnPPATHS']              = cms.vstring("HLT_Ele20WP60_Ele8_Mass55_v*", "HLT_Ele25WP60_SC4_Mass55_v*")
-    options['TnPHLTTagFilters']      = cms.vstring("hltEle20WP60Ele8TrackIsoFilter", "hltEle25WP60SC4TrackIsoFilter")
-    options['TnPHLTProbeFilters']    = cms.vstring("hltEle20WP60Ele8PixelMatchUnseededFilter", "hltEle25WP60SC4EtUnseededFilter")
-    options['HLTFILTERTOMEASURE']    = cms.vstring("hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoFilter")
+    options['TnPPATHS']            = ["HLT_Ele23_WPLoose_Gsf_v1",]
+    options['TnPHLTTagFilters']    = ["hltEle23WPLooseGsfTrackIsoFilter"]
+    options['TnPHLTProbeFilters']  = cms.vstring()
+    options['HLTFILTERTOMEASURE']  = cms.vstring("")
     options['GLOBALTAG']             = 'MCRUN2_74_V9'
     options['EVENTSToPROCESS']       = cms.untracked.VEventRange()
 

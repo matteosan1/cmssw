@@ -783,9 +783,9 @@ void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const 
     eff.get(i);
     xArray[i] = x->getVal();
     yArray[i] = e->getVal();
-    erryLowArray[i] = e->getErrorLo();
+    erryLowArray[i] = fabs(e->getErrorLo());
     erryHighArray[i] = e->getErrorHi();
-    //errxLowArray[i] = x->getErrorLo();
+    //errxLowArray[i] = fabs(x->getErrorLo());
     //erryHighArray[i] = x->getErrorHi();
   }
   canvas.cd();

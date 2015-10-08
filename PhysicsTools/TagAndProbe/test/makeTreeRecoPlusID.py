@@ -39,16 +39,16 @@ if (varOptions.isMC):
     options['TnPPATHS']            = cms.vstring("HLT_Ele23_WP75_Gsf_v*")
     options['TnPHLTTagFilters']    = cms.vstring("hltEle23WP75GsfTrackIsoFilter")
     options['TnPHLTProbeFilters']  = cms.vstring()
-    options['HLTFILTERTOMEASURE']  = cms.vstring("hltEle27WP75GsfTrackIsoFilter")
+    options['HLTFILTERTOMEASURE']  = cms.vstring("")
     options['GLOBALTAG']           = 'MCRUN2_74_V9A'
     options['EVENTSToPROCESS']     = cms.untracked.VEventRange()
 else:
     options['INPUT_FILE_NAME']     = "/store/data/Run2015B/SingleElectron/MINIAOD/PromptReco-v1/000/251/244/00000/12EE24E2-8F27-E511-80D1-02163E013793.root"
     options['OUTPUT_FILE_NAME']    = "TnPTree_data.root"
-    options['TnPPATHS']            = ["HLT_Ele27_eta2p1_WPLoose_Gsf_v1",]
-    options['TnPHLTTagFilters']    = ["hltEle27WPLooseGsfTrackIsoFilter"]
+    options['TnPPATHS']            = ["HLT_Ele23_WPLoose_Gsf_v1",]
+    options['TnPHLTTagFilters']    = ["hltEle23WPLooseGsfTrackIsoFilter"]
     options['TnPHLTProbeFilters']  = cms.vstring()
-    options['HLTFILTERTOMEASURE']  = cms.vstring("hltEle27WP75GsfTrackIsoFilter")
+    options['HLTFILTERTOMEASURE']  = cms.vstring("")
     options['GLOBALTAG']           = 'GR_P_V56'
     options['EVENTSToPROCESS']     = cms.untracked.VEventRange()
 
