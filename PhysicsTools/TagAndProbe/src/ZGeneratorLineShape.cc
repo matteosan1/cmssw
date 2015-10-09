@@ -26,7 +26,6 @@ ZGeneratorLineShape::ZGeneratorLineShape(const ZGeneratorLineShape& other, const
 
 
 Double_t ZGeneratorLineShape::evaluate() const{
-
-  // std::cout<<"gen shape: m, evaluate= "<<m<<", "<<dataHist->weight(m.arg())<<std::endl;
+  //std::cout<<"gen shape: m, evaluate= "<<m<<", "<<dataHist->weight(m.arg())<<std::endl;
   return dataHist->weight(m.arg()) ;
 }

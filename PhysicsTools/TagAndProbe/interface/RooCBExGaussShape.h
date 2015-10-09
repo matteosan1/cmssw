@@ -16,13 +16,12 @@ class RooCBExGaussShape : public RooAbsPdf {
 public:
   RooCBExGaussShape() {} ; 
   RooCBExGaussShape(const char *name, const char *title,
-	      RooAbsReal& _m,
-	      RooAbsReal& _m0,
-	      RooAbsReal& _sigma,
-	      RooAbsReal& _alpha,
-	      RooAbsReal& _n,
-              RooAbsReal& _sigma_2,
-	      RooAbsReal& _frac
+		    RooAbsReal& _m,
+		    RooAbsReal& _m0,
+		    RooAbsReal& _sigma,
+		    RooAbsReal& _alpha,
+		    RooAbsReal& _n,
+		    RooAbsReal& _sigma_2
 		    );
 
   RooCBExGaussShape(const RooCBExGaussShape& other, const char* name);
@@ -30,7 +29,7 @@ public:
   inline ~RooCBExGaussShape(){}
   Double_t evaluate() const ;
   
-  ClassDef(RooCBExGaussShape,1)
+  ClassDef(RooCBExGaussShape, 2)
 
 protected:
 
@@ -40,8 +39,6 @@ protected:
   RooRealProxy  alpha ;
   RooRealProxy  n ;
   RooRealProxy  sigma_2 ;
-  RooRealProxy  frac ;
-
 };
 
 #endif
