@@ -20,6 +20,7 @@ def main(options):
         for binVar2 in xrange(len(var2s)-1):
             psetName = options.idLabel+"_"+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1])
             psetName = psetName.replace(".", "p") + " = cms.vstring(\n"
+            psetName = psetName.replace("-", "m") + " = cms.vstring(\n"
             outputFile.write(psetName)
 
             outputFile.write("\"RooGaussian::signalResPass(mass, meanP[1.0,-5.000,5.000],sigmaP[0.5,0.001,5.000])\",\n")
@@ -27,7 +28,8 @@ def main(options):
             histNameSt = "hMass_"+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1])
             outputFile.write("\"ZGeneratorLineShape::signalPhyPass(mass,\\\""+options.templateFile+"\\\", \\\""+histNameSt+"_Pass\\\")\",\n"),
             outputFile.write("\"ZGeneratorLineShape::signalPhyFail(mass,\\\""+options.templateFile+"\\\", \\\""+histNameSt+"_Fail\\\")\",\n"),
-            outputFile.write("\"RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], gammaPass[0.1, 0, 1], peakPass[90.0])\",\n")
+            outputFile.write(options.passBkgPdf+",\n")
+            outputFile.write(options.failBkgPdf+",\n")
             outputFile.write("\"RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], gammaFail[0.1, 0, 1], peakFail[90.0])\",\n")
             outputFile.write("\"FCONV::signalPass(mass, signalPhyPass, signalResPass)\",\n")
             outputFile.write("\"FCONV::signalFail(mass, signalPhyFail, signalResFail)\",\n")     
@@ -46,6 +48,8 @@ if __name__ == "__main__":
     parser.add_option("-t", "--templateFile", default="templatesID.root", help="Output filename")
     parser.add_option("", "--var1Bins", default="20,30,40,50,200", help="Binning to use in var1")
     parser.add_option("", "--var2Bins", default="0.0,1.0,1.4442,1.566,2.0,2.5", help="Binning to use in var2")
+    parser.add_option("", "--failBkgPdf", default="\"RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], gammaFail[0.1, 0, 1], peakFail[90.0])\"", help="Background PDF for passing probes")
+    parser.add_option("", "--passBkgPdf", default="\"RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], gammaPass[0.1, 0, 1], peakPass[90.0])\"", help="Background PDF for failing probes")
 
     (options, arg) = parser.parse_args()
      

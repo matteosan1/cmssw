@@ -741,11 +741,12 @@ void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName
       TIterator* catIt = allCats1D.typeIterator();
       for(RooCatType* t = (RooCatType*)catIt->Next(); t!=0; t = (RooCatType*)catIt->Next() ){
         TString catName = t->GetName();
-        if(catName.Contains("NotMapped")) continue;
+        if(catName.Contains("NotMapped")) 
+	  continue;
         catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_and_");
-        RooDataSet* eff_bin = (RooDataSet*) myEff.reduce( Cut(TString::Format("allCats1D==%d",t->getVal())) );
-        makeEfficiencyPlot1D(*eff_bin, *v1, TString::Format("%s_PLOT_%s", v1->GetName(), catName.Data()), catName, effName);
-        delete eff_bin;
+        //RooDataSet* eff_bin = (RooDataSet*) myEff.reduce( Cut(TString::Format("allCats1D==%d",t->getVal())) );
+        makeEfficiencyPlot1D(myEff, *v1, TString::Format("%s_PLOT_%s", v1->GetName(), catName.Data()), catName, effName);
+        //delete eff_bin;
       }
     }
   }
