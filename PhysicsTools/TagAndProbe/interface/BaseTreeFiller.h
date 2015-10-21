@@ -12,12 +12,11 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
-#include "DataFormats/METReco/interface/MET.h"
-#include "DataFormats/METReco/interface/METCollection.h"
-#include "DataFormats/METReco/interface/CaloMET.h"
-#include "DataFormats/METReco/interface/CaloMETCollection.h"
-#include "DataFormats/METReco/interface/PFMET.h"
-#include "DataFormats/METReco/interface/PFMETCollection.h"
+
+#include "DataFormats/PatCandidates/interface/MET.h"
+
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -26,6 +25,7 @@
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
 
 #include <TTree.h>
+#include <TH1F.h>
 #include <boost/utility.hpp>
 
 
@@ -166,12 +166,13 @@ class BaseTreeFiller : boost::noncopyable {
         /// How event weights are defined: 'None' = no weights, 'Fixed' = one value specified in cfg file, 'External' = read weight from the event (as double)
         enum WeightMode { None, Fixed, External };
         WeightMode weightMode_;
-        edm::EDGetTokenT<double> weightSrcToken_;
+        edm::EDGetTokenT<GenEventInfoProduct> weightSrcToken_;
         edm::EDGetTokenT<reco::VertexCollection> recVtxsToken_;
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
-        edm::EDGetTokenT<reco::CaloMETCollection> metToken_;
-        edm::EDGetTokenT<reco::METCollection> tcmetToken_;
-        edm::EDGetTokenT<reco::PFMETCollection> pfmetToken_;
+        edm::EDGetTokenT<pat::METCollection> pfmetToken_;
+
+	edm::InputTag PUweightSrc_;
+	bool storePUweight_;
 
         /// Ignore exceptions when evaluating variables
         bool ignoreExceptions_;
@@ -181,7 +182,8 @@ class BaseTreeFiller : boost::noncopyable {
 
         /// Add branches with event variables: met, sum ET, .. etc.
 	bool addEventVariablesInfo_;
-
+	bool saveBeamSpot_;
+	bool saveMET_;
         void addBranches_(TTree *tree, const edm::ParameterSet &iConfig, edm::ConsumesCollector & iC, const std::string &branchNamePrefix="") ;
 
         //implementation notice: these two are 'mutable' because we will fill them from a 'const' method
@@ -189,11 +191,12 @@ class BaseTreeFiller : boost::noncopyable {
         mutable float weight_;
         mutable uint32_t run_, lumi_, mNPV_;
         mutable uint64_t event_;
-
+	mutable float PUweight_;
+	mutable std::vector<std::string> weightsToCombine_;
+	mutable float totWeight_;
+	
         mutable float mPVx_,mPVy_,mPVz_,mBSx_,mBSy_,mBSz_;
-
-        mutable float mMET_,mSumET_,mMETSign_,mtcMET_,mtcSumET_,
-	  mtcMETSign_,mpfMET_,mpfSumET_,mpfMETSign_;
+	mutable float mpfMET_,mpfSumET_,mpfPhi_;
 };
 
 
