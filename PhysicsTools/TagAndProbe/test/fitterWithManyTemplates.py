@@ -50,6 +50,7 @@ options.register(
     VarParsing.varType.bool,
     "Do not compute fitting, just cut and count"
     )
+options.parseArguments()
 
 process = cms.Process("TagProbe")
 process.source = cms.Source("EmptySource")
@@ -76,7 +77,7 @@ else:
 #specifies the binning of parameters
 EfficiencyBins = cms.PSet(
     probe_Ele_et = cms.vdouble(20. ,40. ,60. ,100.),
-    probe_sc_abseta = cms.vdouble(0.0, 1.0, 2.5),
+    probe_sc_eta = cms.vdouble(-2.5, -1.0, 0.0, 1.0, 2.5),
     )
 
 DataBinningSpecification = cms.PSet(
@@ -84,12 +85,20 @@ DataBinningSpecification = cms.PSet(
     BinnedVariables = cms.PSet(EfficiencyBins),
     BinToPDFmap = cms.vstring(
         "tight_20p0To40p0_0p0To1p5", 
-        "*et_bin0*abseta_bin0*","tight_20p0To40p0_0p0To1p5",
-        "*et_bin1*abseta_bin0*","tight_40p0To60p0_0p0To1p5",
-        "*et_bin2*abseta_bin0*","tight_60p0To100p0_0p0To1p5",
-        "*et_bin0*abseta_bin1*","tight_20p0To40p0_1p5To2p5",
-        "*et_bin1*abseta_bin1*","tight_40p0To60p0_1p5To2p5",
-        "*et_bin2*abseta_bin1*","tight_60p0To100p0_1p5To2p5"
+        "*et_bin0*eta_bin0*","tight_20p0To40p0_m2p5Tom1p0",
+        "*et_bin0*eta_bin1*","tight_20p0To40p0_m1p0To0p0",
+        "*et_bin0*eta_bin2*","tight_20p0To40p0_0p0To1p0",
+        "*et_bin0*eta_bin3*","tight_20p0To40p0_1p0To2p5",
+
+        "*et_bin1*eta_bin0*","tight_40p0To60p0_m2p5Tom1p0",
+        "*et_bin1*eta_bin1*","tight_40p0To60p0_m1p0To0p0",
+        "*et_bin1*eta_bin2*","tight_40p0To60p0_0p0To1p0",
+        "*et_bin1*eta_bin3*","tight_40p0To60p0_1p0To2p5",
+
+        "*et_bin2*eta_bin0*","tight_60p0To100p0_m2p5Tom1p0",
+        "*et_bin2*eta_bin1*","tight_60p0To100p0_m1p0To0p0",
+        "*et_bin2*eta_bin2*","tight_60p0To100p0_0p0To1p0",
+        "*et_bin2*eta_bin3*","tight_60p0To100p0_1p0To2p5",
         )
     )
 
@@ -98,12 +107,12 @@ McBinningSpecification = cms.PSet(
     BinnedVariables = cms.PSet(EfficiencyBins, mcTrue = cms.vstring("true")),
     BinToPDFmap = cms.vstring(
         "tight_20p0To40p0_0p0To1p5", 
-        "*et_bin0*abseta_bin0*","tight_20p0To40p0_0p0To1p5",
-        "*et_bin1*abseta_bin0*","tight_40p0To60p0_0p0To1p5",
-        "*et_bin2*abseta_bin0*","tight_60p0To100p0_0p0To1p5",
-        "*et_bin0*abseta_bin1*","tight_20p0To40p0_1p5To2p5",
-        "*et_bin1*abseta_bin1*","tight_40p0To60p0_1p5To2p5",
-        "*et_bin2*abseta_bin1*","tight_60p0To100p0_1p5To2p5",
+        "*et_bin0*eta_bin0*","tight_20p0To40p0_0p0To1p5",
+        "*et_bin1*eta_bin0*","tight_40p0To60p0_0p0To1p5",
+        "*et_bin2*eta_bin0*","tight_60p0To100p0_0p0To1p5",
+        "*et_bin0*eta_bin1*","tight_20p0To40p0_1p5To2p5",
+        "*et_bin1*eta_bin1*","tight_40p0To60p0_1p5To2p5",
+        "*et_bin2*eta_bin1*","tight_60p0To100p0_1p5To2p5",
         )
 )
 
@@ -117,7 +126,7 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                         NumCPU = cms.uint32(1),
                                         SaveWorkspace = cms.bool(False), #VERY TIME CONSUMING FOR MC
                                         doCutAndCount = cms.bool(options.doCutAndCount),
-                                        floatShapeParameters = cms.bool(False),
+                                        floatShapeParameters = cms.bool(True),
                                         binnedFit = cms.bool(True),
                                         binsForFit = cms.uint32(60),
                                         WeightVariable = cms.string("totWeight"),
@@ -125,7 +134,7 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                         Variables = cms.PSet(
         mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
         probe_Ele_et = cms.vstring("Probe E_{T}", "0", "100", "GeV/c"),
-        probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""), 
+        probe_sc_eta = cms.vstring("Probe #eta", "-2.5", "2.5", ""), 
         totWeight = cms.vstring("totWeight", "-1000000", "100000000", ""), 
         Ele_dRTau = cms.vstring("Ele_dRTau", "0.2", "100000", ""),
         probe_dRTau = cms.vstring("probe_dRTau", "0.2", "100000", ""),
@@ -145,7 +154,7 @@ if (not options.isMC):
     process.TnPMeasurement.Variables = cms.PSet(
         mass = cms.vstring("Tag-Probe Mass", "60.0", "120.0", "GeV/c^{2}"),
         probe_Ele_et = cms.vstring("Probe E_{T}", "20", "100", "GeV/c"),
-        probe_sc_abseta = cms.vstring("Probe #eta", "0", "2.5", ""), 
+        probe_sc_eta = cms.vstring("Probe #eta", "-2.5", "2.5", ""), 
         )
     for pdf in process.TnPMeasurement.PDFs.__dict__:
         param =  process.TnPMeasurement.PDFs.getParameter(pdf)

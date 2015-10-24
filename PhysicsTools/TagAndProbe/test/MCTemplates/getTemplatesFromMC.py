@@ -31,7 +31,7 @@ def main(options):
     for binVar1 in xrange(len(var1s)-1):
         for binVar2 in xrange(len(var2s)-1):
             histNameSt = "hMass_"+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1])
-            histNameSt = histNameSt.replace("-", "m")
+            #histNameSt = histNameSt.replace("-", "m")
             print "Doing templates for "+histNameSt,
             hp = histNameSt+"_Pass"
             hf = histNameSt+"_Fail"
