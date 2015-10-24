@@ -19,8 +19,9 @@ def main(options):
     for binVar1 in xrange(len(var1s)-1):
         for binVar2 in xrange(len(var2s)-1):
             psetName = options.idLabel+"_"+str(var1s[binVar1])+"To"+str(var1s[binVar1+1])+"_"+str(var2s[binVar2])+"To"+str(var2s[binVar2+1])
-            psetName = psetName.replace(".", "p") + " = cms.vstring(\n"
-            psetName = psetName.replace("-", "m") + " = cms.vstring(\n"
+            psetName = psetName.replace(".", "p")
+            psetName = psetName.replace("-", "m")
+            psetName = psetName + " = cms.vstring(\n"
             outputFile.write(psetName)
 
             outputFile.write("\"RooGaussian::signalResPass(mass, meanP[1.0,-5.000,5.000],sigmaP[0.5,0.001,5.000])\",\n")

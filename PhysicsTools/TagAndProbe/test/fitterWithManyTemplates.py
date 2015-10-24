@@ -83,7 +83,7 @@ DataBinningSpecification = cms.PSet(
     UnbinnedVariables = cms.vstring("mass"),
     BinnedVariables = cms.PSet(EfficiencyBins),
     BinToPDFmap = cms.vstring(
-        "tight_20.0To40.0_0.0To1.5", 
+        "tight_20p0To40p0_0p0To1p5", 
         "*et_bin0*abseta_bin0*","tight_20p0To40p0_0p0To1p5",
         "*et_bin1*abseta_bin0*","tight_40p0To60p0_0p0To1p5",
         "*et_bin2*abseta_bin0*","tight_60p0To100p0_0p0To1p5",
@@ -97,7 +97,7 @@ McBinningSpecification = cms.PSet(
     UnbinnedVariables = cms.vstring("mass", "totWeight", "Ele_dRTau", "probe_dRTau"),
     BinnedVariables = cms.PSet(EfficiencyBins, mcTrue = cms.vstring("true")),
     BinToPDFmap = cms.vstring(
-        "tight_20.0To40.0_0.0To1.5", 
+        "tight_20p0To40p0_0p0To1p5", 
         "*et_bin0*abseta_bin0*","tight_20p0To40p0_0p0To1p5",
         "*et_bin1*abseta_bin0*","tight_40p0To60p0_0p0To1p5",
         "*et_bin2*abseta_bin0*","tight_60p0To100p0_0p0To1p5",
