@@ -170,6 +170,7 @@ class BaseTreeFiller : boost::noncopyable {
         edm::EDGetTokenT<reco::VertexCollection> recVtxsToken_;
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
         edm::EDGetTokenT<pat::METCollection> pfmetToken_;
+	edm::EDGetTokenT<std::vector<double> > rhoToken_;
 
 	edm::InputTag PUweightSrc_;
 	bool storePUweight_;
@@ -184,6 +185,7 @@ class BaseTreeFiller : boost::noncopyable {
 	bool addEventVariablesInfo_;
 	bool saveBeamSpot_;
 	bool saveMET_;
+	bool saveRho_;
         void addBranches_(TTree *tree, const edm::ParameterSet &iConfig, edm::ConsumesCollector & iC, const std::string &branchNamePrefix="") ;
 
         //implementation notice: these two are 'mutable' because we will fill them from a 'const' method
@@ -197,6 +199,7 @@ class BaseTreeFiller : boost::noncopyable {
 	
         mutable float mPVx_,mPVy_,mPVz_,mBSx_,mBSy_,mBSz_;
 	mutable float mpfMET_,mpfSumET_,mpfPhi_;
+	mutable float rho_;
 };
 
 

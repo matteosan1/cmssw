@@ -89,6 +89,12 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
       tree_->Branch("event_met_pfphi"    ,&mpfPhi_   ,"mpfPhi/F");
     }
 
+    saveRho_ = iConfig.existsAs<edm::InputTag>("rho") ? true:false;
+    if (saveRho_) {
+      rhoToken_ = iC.consumes<std::vector<double> >(edm::InputTag("rho"));
+      tree_->Branch("event_rho"    ,&rho_   ,"rho/F");
+    }
+
     ignoreExceptions_ = iConfig.existsAs<bool>("ignoreExceptions") ? iConfig.getParameter<bool>("ignoreExceptions") : false;
 
     tree_->Branch("totWeight", &totWeight_, "totWeight/F");
@@ -212,6 +218,12 @@ void tnp::BaseTreeFiller::init(const edm::Event &iEvent) const {
 	  mpfMET_ = met.pt();
 	  mpfPhi_ = met.phi();
 	  mpfSumET_ = met.sumEt();
+	}
+
+	if (saveRho_) {
+	  edm::Handle<std::vector<double>> rhos;
+	  iEvent.getByToken(rhoToken_, rhos);
+	  rho_ = rhos->front();
 	}
     }
 
