@@ -117,7 +117,7 @@ PileupWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::auto_ptr<std::vector<float> > pileupWeights( new std::vector<float> );
 
   Handle<std::vector< PileupSummaryInfo > >  PupInfo;
-  iEvent.getByLabel(edm::InputTag("addPileupInfo"), PupInfo);
+  iEvent.getByLabel(edm::InputTag("slimmedAddPileupInfo"), PupInfo);
   
   std::vector<PileupSummaryInfo>::const_iterator PVI;
   

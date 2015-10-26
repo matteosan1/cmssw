@@ -170,7 +170,7 @@ class BaseTreeFiller : boost::noncopyable {
         edm::EDGetTokenT<reco::VertexCollection> recVtxsToken_;
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
         edm::EDGetTokenT<pat::METCollection> pfmetToken_;
-	edm::EDGetTokenT<std::vector<double> > rhoToken_;
+	edm::EDGetTokenT<double> rhoToken_;
 
 	edm::InputTag PUweightSrc_;
 	bool storePUweight_;

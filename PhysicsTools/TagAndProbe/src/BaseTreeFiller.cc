@@ -83,7 +83,7 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
 
     saveMET_ =  iConfig.existsAs<edm::InputTag>("pfMet") ? true: false;
     if (saveMET_) {
-      pfmetToken_ = iC.consumes<pat::METCollection>(edm::InputTag("pfMet"));
+      pfmetToken_ = iC.consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("pfMet"));
       tree_->Branch("event_met_pfmet"    ,&mpfMET_   ,"mpfMET/F");
       tree_->Branch("event_met_pfsumet"  ,&mpfSumET_ ,"mpfSumET/F");
       tree_->Branch("event_met_pfphi"    ,&mpfPhi_   ,"mpfPhi/F");
@@ -91,7 +91,7 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
 
     saveRho_ = iConfig.existsAs<edm::InputTag>("rho") ? true:false;
     if (saveRho_) {
-      rhoToken_ = iC.consumes<std::vector<double> >(edm::InputTag("rho"));
+      rhoToken_ = iC.consumes<double>(iConfig.getParameter<edm::InputTag>("rho"));
       tree_->Branch("event_rho"    ,&rho_   ,"rho/F");
     }
 
@@ -221,9 +221,9 @@ void tnp::BaseTreeFiller::init(const edm::Event &iEvent) const {
 	}
 
 	if (saveRho_) {
-	  edm::Handle<std::vector<double>> rhos;
+	  edm::Handle<double> rhos;
 	  iEvent.getByToken(rhoToken_, rhos);
-	  rho_ = rhos->front();
+	  rho_ = *rhos;
 	}
     }
 
