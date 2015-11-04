@@ -59,6 +59,7 @@ class PileupWeightProducer : public edm::EDProducer {
 
   //bool firsttime_;
   bool hardcodedWeights_;
+  edm::InputTag pileupInfoTag_;
   std::string pileupMC_;
   std::string pileupData_;
   edm::LumiReWeighting LumiWeights_;
@@ -86,6 +87,7 @@ PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& iConfig) {
   hardcodedWeights_ = iConfig.getUntrackedParameter<bool>("hardcodedWeights");
   pileupMC_ = iConfig.existsAs<std::string>("PileupMCFile") ? iConfig.getParameter<std::string>("PileupMCFile") : "PUMC_dist.root" ;
   pileupData_ = iConfig.existsAs<std::string>("PileupDataFile") ? iConfig.getParameter<std::string>("PileupDataFile") : "PUData_dist.root" ;
+  pileupInfoTag_ = iConfig.existsAs<edm::InputTag>("pileupInfoTag") ? iConfig.getParameter<edm::InputTag>("pileupInfoTag") : edm::InputTag("slimmedAddPileupInfo");
 
   //register your products
   produces<std::vector<float> >( "pileupWeights" ).setBranchAlias( "pileupWeights" );
@@ -117,7 +119,7 @@ PileupWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::auto_ptr<std::vector<float> > pileupWeights( new std::vector<float> );
 
   Handle<std::vector< PileupSummaryInfo > >  PupInfo;
-  iEvent.getByLabel(edm::InputTag("slimmedAddPileupInfo"), PupInfo);
+  iEvent.getByLabel(pileupInfoTag_, PupInfo);
   
   std::vector<PileupSummaryInfo>::const_iterator PVI;
   

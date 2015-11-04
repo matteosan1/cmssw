@@ -18,7 +18,8 @@ def setModules(process, options):
     process.hltFilter.HLTPaths = options['TnPPATHS']
     
     process.pileupReweightingProducer = cms.EDProducer("PileupWeightProducer",
-                                                       hardcodedWeights = cms.untracked.bool(True)
+                                                       hardcodedWeights = cms.untracked.bool(True),
+                                                       pileupInfoTag    = cms.InputTag("addPileupInfo")
                                                        )
     
     process.GsfDRToNearestTauProbe = cms.EDProducer("DeltaRNearestGenPComputer",
