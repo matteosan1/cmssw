@@ -1,4 +1,5 @@
 <use   name="roofit"/>
+<use   name="vdt"/>
 <use   name="FWCore/MessageLogger"/>
 <use   name="FWCore/PluginManager"/>
 <use   name="FWCore/ParameterSet"/>
@@ -12,6 +13,9 @@
 <use   name="CommonTools/Utils"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="PhysicsTools/UtilAlgos"/>
+<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
+<flags LCG_DICT_HEADER="classes.h"/>
+<flags LCG_DICT_XML="classes_def.xml"/>
 <export>
   <lib   name="1"/>
 </export>
