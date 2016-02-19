@@ -11,7 +11,7 @@
 class TagProbeFitter {
   public:
   ///construct the fitter with the inputFileName, inputDirectoryName, inputTreeName, outputFileName and specify wether to save the workspace with data for each bin 
-  TagProbeFitter(const std::vector<std::string>& inputFileNames, std::string inputDirectoryName, std::string inputTreeName, std::string outputFileName, int numCPU = 1, bool saveWorkspace_ = false, bool floatShapeParameters = true, const std::vector<std::string>& fixVars_ = std::vector<std::string>() );
+  TagProbeFitter(const std::vector<std::string>& inputFileNames, std::string inputDirectoryName, std::string inputTreeName, std::string outputFileName, int numCPU = 1, bool saveWorkspace = false, bool docutandcount = false, bool floatShapeParameters = true, const std::vector<std::string>& fixVars_ = std::vector<std::string>() );
 
   ///destructor closes the files
   ~TagProbeFitter();
@@ -26,7 +26,7 @@ class TagProbeFitter {
   bool addExpression(std::string expressionName, std::string title, std::string expression, const std::vector<std::string>& arguments);
 
   ///adds a new category based on a cut
-  bool addThresholdCategory(std::string categoryName, std::string title, std::string varName, double cutValue);
+  bool addThresholdCategory(std::string categoryName, std::string varName, double cutValue, std::string cutType);
 
   ///add a new PDF to the list of available PDFs; "pdfCommands" are parsed by factory().
   /// the user needs to define efficiency[0.9,0,1] for the initial value, "signal" PDF, "backgroundPass" PDF and "backgroundFail" PDF
@@ -50,9 +50,6 @@ class TagProbeFitter {
   /// set number of bins to use when making the plots; 0 = automatic
   void setBinsForMassPlots(int bins) ;
 
-  //// turn on or off the saving of distribution plots)
-  void setSaveDistributionsPlot(bool saveDistributionsPlot_) { doSaveDistributionsPlot = saveDistributionsPlot_; }
-
   /// set a variable to be used as weight for a dataset. empty string means no weights.
   void setWeightVar(const std::string &weight);
 
@@ -65,6 +62,7 @@ class TagProbeFitter {
 
   ///pointer to the output file
   TFile* outputFile;
+  TFile* outputTemp;
 
   ///pointer to the TDirectory in the output file that is the root directory for this fitter
   TDirectory* outputDirectory;
@@ -72,11 +70,9 @@ class TagProbeFitter {
   ///number of CPUs to use for the fit
   int numCPU;
 
-  ///save distribution plots
-  bool doSaveDistributionsPlot;
-
   ///the default option wether to save the workspace for each bin
   bool saveWorkspace;
+  bool docutandcount;
 
   ///do binned fit; 0 = automatic, 1 = yes, -1 = no. d
   int binnedFit;
@@ -124,7 +120,7 @@ class TagProbeFitter {
   void varRestorer(RooWorkspace* w);
 
   ///calculate the efficiecny with a simulataneous maximum likelihood fit in the dataset found in the workspace with PDF pdfName
-  void doFitEfficiency(RooWorkspace* w, std::string pdfName, RooRealVar& efficiency);
+  void doFitEfficiency(RooWorkspace* w, RooAbsData* data, std::string pdfName, RooRealVar& efficiency);
 
   ///calculate the efficiecny with side band substraction in the dataset found in the workspace
   void doSBSEfficiency(RooWorkspace* w, RooRealVar& efficiency);
@@ -136,22 +132,22 @@ class TagProbeFitter {
   void createPdf(RooWorkspace* w, std::vector<std::string>& pdfCommands);
 
   ///sets initial values of the PDF parameters based on the data available in the workspace
-  void setInitialValues(RooWorkspace* w);
+  void setInitialValues(RooWorkspace* w, RooAbsData* data=0);
 
   ///saves the fit canvas
   void saveFitPlot(RooWorkspace* w);
 
   ///saves the distributions canvas
-  void saveDistributionsPlot(RooWorkspace* w);
+  void saveDistributionsPlot(RooWorkspace* w, RooAbsData* data);
 
   ///saves the efficiency plots
   void saveEfficiencyPlots(RooDataSet& eff, const TString& effName, RooArgSet& binnedVariables, RooArgSet& mappedCategories);
   
   ///makes the 1D plot
-  void makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName, const char *catName = 0, int catIndex = -1);
-   
+  void makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName);
+  
   ///makes the 2D plot
-  void makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName, const char *catName = 0, int catIndex = -1);
+  void makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName);
   
 };
 

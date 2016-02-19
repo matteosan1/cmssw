@@ -29,4 +29,5 @@
   <use   name="PhysicsTools/HepMCCandAlgos"/>
   <use   name="PhysicsTools/PatUtils"/>
   <use   name="PhysicsTools/PatAlgos"/>
+<flags CXXFLAGS="-O0 -g3 -fno-inline"></flags>
 </library>

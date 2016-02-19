@@ -1,104 +1,92 @@
 #include "PhysicsTools/TagAndProbe/interface/TagProbeFitter.h"
 #include <stdexcept>
-//#include "TagProbeFitter.h"
+#include <sys/stat.h>
 
 #include "TROOT.h"
-#include "TFile.h"
-#include "TPad.h"
-#include "TText.h"
+#include "TSystem.h"
 #include "TCanvas.h"
-#include "TGraphAsymmErrors.h"
+#include "TTreeFormula.h"
 #include "TH2F.h"
 #include "TStyle.h"
-#include "Math/QuantFuncMathCore.h"
-#include "Roo1DTable.h"
-#include "RooAbsDataStore.h"
-#include "RooAbsReal.h"
+#include "RooWorkspace.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooRealVar.h"
+#include "RooFormulaVar.h"
 #include "RooAddPdf.h"
+#include "RooGlobalFunc.h"
+#include "RooCategory.h"
+#include "RooSimultaneous.h"
+#include "RooPlot.h"
+#include "RooFitResult.h"
 #include "RooBinning.h"
 #include "RooBinningCategory.h"
-#include "RooCategory.h"
-#include "RooChebychev.h"
-#include "RooDataHist.h"
-#include "RooDataSet.h"
-#include "RooEfficiency.h"
-#include "RooExtendPdf.h"
-#include "RooFitResult.h"
-#include "RooFormulaVar.h"
-#include "RooGaussian.h"
-#include "RooGenericPdf.h"
-#include "RooGlobalFunc.h"
-#include "RooLinkedListIter.h"
-#include "RooMappedCategory.h"
-#include "RooMinimizer.h"
-#include "RooMinuit.h"
-#include "RooMsgService.h"
 #include "RooMultiCategory.h"
-#include "RooNLLVar.h"
-#include "RooNumIntConfig.h"
-#include "RooPlot.h"
-#include "RooProdPdf.h"
-#include "RooProfileLL.h"
-#include "RooRealVar.h"
-#include "RooSimultaneous.h"
+#include "RooMappedCategory.h"
 #include "RooThresholdCategory.h"
+#include "Roo1DTable.h"
+#include "RooMinuit.h"
+#include "RooNLLVar.h"
+#include "RooAbsDataStore.h"
+#include "RooEfficiency.h"
+#include "RooGaussian.h"
+#include "RooChebychev.h"
+#include "RooProdPdf.h"
+#include "RooGenericPdf.h"
+#include "RooExtendPdf.h"
 #include "RooTrace.h"
-#include "RooWorkspace.h"
+#include "RooMsgService.h"
+
+#include "Math/QuantFuncMathCore.h"
 
 using namespace std;
 using namespace RooFit;
 
-TagProbeFitter::TagProbeFitter(const std::vector<std::string>& inputFileNames, string inputDirectoryName, string inputTreeName, string outputFileName, int numCPU_, bool saveWorkspace_, bool floatShapeParameters_, const std::vector<std::string>& fixVars_){
+TagProbeFitter::TagProbeFitter(const std::vector<std::string>& inputFileNames, string inputDirectoryName, string inputTreeName, string outputFileName, int numCPU_, bool saveWorkspace_, bool docutandcount_, bool floatShapeParameters_, const std::vector<std::string>& fixVars_):
+  numCPU(numCPU_),
+  saveWorkspace(saveWorkspace_),
+  docutandcount(docutandcount_),
+  binnedFit(false),
+  massBins(0),
+  weightVar(""),
+  fixVars(fixVars_), 
+  floatShapeParameters(floatShapeParameters_),
+  quiet(false) {
+
   inputTree = new TChain((inputDirectoryName+"/"+inputTreeName).c_str());
   for(size_t i=0; i<inputFileNames.size(); i++){
     inputTree->Add(inputFileNames[i].c_str());
   }
+
   outputFile = new TFile(outputFileName.c_str(),"recreate");
   outputDirectory = outputFile->mkdir(inputDirectoryName.c_str());
-  numCPU = numCPU_;
-  saveWorkspace = saveWorkspace_;
-  massBins = 0; // automatic default
-  floatShapeParameters = floatShapeParameters_;
-  fixVars = fixVars_;
-  weightVar = "";
-  if(!floatShapeParameters && fixVars.empty()) std::cout << "TagProbeFitter: " << "You wnat to fix some variables but do not specify them!";
 
+  if(!floatShapeParameters && fixVars.empty()) std::cout << "TagProbeFitter: " << "You want to fix some variables but do not specify them!";
+  
   gROOT->SetStyle("Plain");
   gStyle->SetTitleFillColor(0);
   gStyle->SetPalette(1);
   gStyle->SetOptStat(0);
   gStyle->SetPaintTextFormat(".2f");
-
-  quiet = false;
-
-  binnedFit = false;
-
-  doSaveDistributionsPlot = true;
-  
-  // make integration very precise
-  RooAbsReal::defaultIntegratorConfig()->setEpsAbs(1e-13);
-  RooAbsReal::defaultIntegratorConfig()->setEpsRel(1e-13);
 }
 
 TagProbeFitter::~TagProbeFitter(){
-  if(inputTree)
+  if (inputTree)
     delete inputTree;
-  if(outputFile)
+  if (outputFile)
     outputFile->Close();
 }
 
 void TagProbeFitter::setQuiet(bool quiet_) { 
-    quiet = quiet_; 
-    if (quiet) {
-        RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-    } else {
-        RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-    }
+  quiet = quiet_; 
+  if (quiet) {
+    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+  } else {
+    RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+  }
 }
 bool TagProbeFitter::addVariable(string name, string title, double low, double hi, string units){
-  RooRealVar temp(name.c_str(), title.c_str(), low, hi, units.c_str());
-  temp.setBins(5000,"cache");
-  variables.addClone(temp);
+  variables.addClone(RooRealVar(name.c_str(), title.c_str(), low, hi, units.c_str()));
   return true;
 }
 
@@ -106,6 +94,7 @@ bool TagProbeFitter::addCategory(string name, string title, string expression){
   RooCategory* c = (RooCategory*) parameterParser.factory(expression.c_str());
   if(!c)
     return false;
+
   //set the name of the category to the passed name instead of the one in the expression
   c->SetName(name.c_str());
   c->SetTitle(title.c_str());
@@ -119,8 +108,8 @@ bool TagProbeFitter::addExpression(string expressionName, string title, string e
 }
 
 
-bool TagProbeFitter::addThresholdCategory(string categoryName, string title, string varName, double cutValue){
-  thresholdCategories.push_back(make_pair(make_pair(categoryName,title), make_pair(varName,cutValue)));
+bool TagProbeFitter::addThresholdCategory(string categoryName, string varName, double cutValue, string cutType){
+  thresholdCategories.push_back(make_pair(make_pair(categoryName, cutType), make_pair(varName,cutValue)));
   return true;
 }
 
@@ -137,37 +126,66 @@ void TagProbeFitter::setWeightVar(const std::string &var) {
   weightVar = var;
 }
 
-string TagProbeFitter::calculateEfficiency(string dirName,const std::vector<string>& effCats,const std::vector<string>& effStates, vector<string>& unbinnedVariables, map<string, vector<double> >& binnedReals, map<string, std::vector<string> >& binnedCategories, vector<string>& binToPDFmap){
+string TagProbeFitter::calculateEfficiency(string dirName,const std::vector<string>& effCats,const std::vector<string>& effStates, vector<string>& unbinnedVariables, map<string, vector<double> >& binnedReals, map<string, std::vector<string> >& binnedCats, vector<string>& binToPDFmap) {
+  
   //go to home directory
   outputDirectory->cd();
   //make a directory corresponding to this efficiency binning
   gDirectory->mkdir(dirName.c_str())->cd();
-
+  
   RooArgSet dataVars;
-
+  std::vector<std::string> vars;
+  
   //collect unbinned variables
   for(vector<string>::iterator v=unbinnedVariables.begin(); v!=unbinnedVariables.end(); v++){
+    vars.push_back(v->c_str());
     dataVars.addClone(variables[v->c_str()], true);
-    if (binnedFit && (v == unbinnedVariables.begin())) {
-        ((RooRealVar&)dataVars[v->c_str()]).setBins(massBins);
-    }
+    if (binnedFit && (v == unbinnedVariables.begin()))
+      ((RooRealVar&)dataVars[v->c_str()]).setBins(massBins);	
   }
+  
+  //add weight
+  if (!weightVar.empty())
+    dataVars.addClone(variables[weightVar.c_str()], true);
+
+  //add efficiency var
+  for (vector<string>::const_iterator effCat = effCats.begin(); effCat != effCats.end(); ++effCat) {
+    if (variables.find(effCat->c_str()) != 0)
+      dataVars.addClone(variables[effCat->c_str()], true);
+  }
+
+  char aChar[100];
   //collect the binned variables and the corresponding bin categories
   RooArgSet binnedVariables;
-  RooArgSet binCategories;
+  std::vector<std::string> binnedVariableNames;
+  //RooArgSet binCategories;
+  std::vector<std::vector<std::string> > binnedCategories;
   for(map<string, vector<double> >::iterator v=binnedReals.begin(); v!=binnedReals.end(); v++){
-    TString name = v->first;
-    if (variables.find(name) == 0) { cerr << "Binned variable '"<<name<<"' not found." << endl; return "Error"; }
-    binnedVariables.addClone(variables[name]);
-   ((RooRealVar&)binnedVariables[name]).setBinning( RooBinning(v->second.size()-1, &v->second[0]) );
-    binCategories.addClone( RooBinningCategory(name+"_bins", name+"_bins", (RooRealVar&)binnedVariables[name]) );
+    std::vector<std::string> aString;
+    //std::string name = v->first;
+    binnedVariableNames.push_back(v->first);
+    //if (dataVars.find(variables[v->first.c_str()]) == 0) { 
+    //  cerr << "Binned variable '"<<v->first<<"' not found." << endl; 
+    //  return "Error"; 
+    //}
+    for (unsigned int i=0; i<v->second.size()-1; i++) {
+      float lowThr = v->second[i];
+      float highThr = v->second[i+1];
+      sprintf(aChar, "%s>%f&&%s<%f", v->first.c_str(), lowThr, v->first.c_str(), highThr);
+      aString.push_back(aChar);
+    }
+    
+    binnedCategories.push_back(aString);
+    binnedVariables.addClone(variables[v->first.c_str()]);
+    ((RooRealVar&)binnedVariables[v->first.c_str()]).setBinning( RooBinning(v->second.size()-1, &v->second[0]) );
+    //binCategories.addClone( RooBinningCategory((v->first+"_bins").c_str(), (v->first+"_bins").c_str(), (RooRealVar&)binnedVariables[v->first.c_str()]) );
   }
   dataVars.addClone(binnedVariables, true);
 
   //collect the category variables and the corresponding mapped categories
   RooArgSet categories;
   RooArgSet mappedCategories;
-  for(map<string, vector<string> >::iterator v=binnedCategories.begin(); v!=binnedCategories.end(); v++){
+  for(map<string, vector<string> >::iterator v=binnedCats.begin(); v!=binnedCats.end(); v++){
     TString name = v->first;
     if (variables.find(name) == 0) { cerr << "Binned category '"<<name<<"' not found." << endl; return "Error"; }
     categories.addClone(variables[name]);
@@ -178,236 +196,292 @@ string TagProbeFitter::calculateEfficiency(string dirName,const std::vector<stri
   }
   dataVars.addClone(categories, true);
 
-  // add the efficiency category if it's not a dynamic one
-  for (vector<string>::const_iterator effCat = effCats.begin(); effCat != effCats.end(); ++effCat) {
-     if (variables.find(effCat->c_str()) != 0) {
-        dataVars.addClone(variables[effCat->c_str()], true);
-     }
-  }
-
-  //  add all variables used in expressions
-   for(vector<pair<pair<string,string>, pair<string, vector<string> > > >::const_iterator ev = expressionVars.begin(), eve = expressionVars.end(); ev != eve; ++ev){
-     for (vector<string>::const_iterator it = ev->second.second.begin(), ed = ev->second.second.end(); it != ed; ++it) {
-       // provided that they are real variables themselves
-       if (variables.find(it->c_str())) dataVars.addClone(variables[it->c_str()], true);
-     }
-   }
-   // add all real variables used in cuts
-   for(vector<pair<pair<string,string>, pair<string, double> > >::const_iterator tc = thresholdCategories.begin(), tce = thresholdCategories.end(); tc != tce; ++tc){
-     if (variables.find(tc->second.first.c_str())) dataVars.addClone(variables[tc->second.first.c_str()], true);
-   }
-
- 
-  //now add the necessary mass and passing variables to make the unbinned RooDataSet
-  RooDataSet data("data", "data", inputTree, 
-                  dataVars,
-                  /*selExpr=*/"", /*wgtVarName=*/(weightVar.empty() ? 0 : weightVar.c_str()));
-
-   // Now add all expressions that are computed dynamically
-   for(vector<pair<pair<string,string>, pair<string, vector<string> > > >::const_iterator ev = expressionVars.begin(), eve = expressionVars.end(); ev != eve; ++ev){
-     RooArgList args;
-     for (vector<string>::const_iterator it = ev->second.second.begin(), ed = ev->second.second.end(); it != ed; ++it) {
-         args.add(dataVars[it->c_str()]);
-     }
-     RooFormulaVar expr(ev->first.first.c_str(), ev->first.second.c_str(), ev->second.first.c_str(), args);
-     RooRealVar *col = (RooRealVar *) data.addColumn(expr);
-     dataVars.addClone(*col);
-   }
- 
-   // And add all dynamic categories from thresholds
-   for(vector<pair<pair<string,string>, pair<string, double> > >::const_iterator tc = thresholdCategories.begin(), tce = thresholdCategories.end(); tc != tce; ++tc){
-     RooThresholdCategory tmp(tc->first.first.c_str(), tc->first.second.c_str(), (RooAbsReal &)dataVars[tc->second.first.c_str()], "above", 1);
-     tmp.addThreshold(tc->second.second, "below",0);
-     RooCategory *cat = (RooCategory *) data.addColumn(tmp);
-     dataVars.addClone(*cat);
-   }
- 
-
-  //merge the bin categories to a MultiCategory for convenience
-  RooMultiCategory allCats("allCats", "allCats", RooArgSet(binCategories, mappedCategories));
-  data.addColumn(allCats);
-  string effName;
-  //setup the efficiency category
-  if (effCats.size() == 1) {
-      effName = effCats.front() + "::" + effStates.front();
-      RooMappedCategory efficiencyCategory("_efficiencyCategory_", "_efficiencyCategory_", (RooCategory&)dataVars[effCats.front().c_str()], "Failed");
-      efficiencyCategory.map(effStates.front().c_str(), "Passed");
-      data.addColumn( efficiencyCategory );
-  } else {
-      RooArgSet rooEffCats; 
-      string multiState = "{";
-      for (size_t i = 0; i < effCats.size(); ++i) {
-        if (i) { multiState += ";"; effName += " && "; }
-        rooEffCats.add((RooCategory &) dataVars[effCats[i].c_str()]);
-        multiState += effStates[i];
-        effName = effCats[i] + "::" + effStates[i];
-      }
-      multiState += "}";
-      RooMultiCategory efficiencyMultiCategory("_efficiencyMultiCategory_", "_efficiencyMultiCategory_", rooEffCats);
-      RooMappedCategory efficiencyCategory("_efficiencyCategory_", "_efficiencyCategory_", efficiencyMultiCategory, "Failed");
-      efficiencyCategory.map(multiState.c_str(), "Passed");
-      data.addColumn( efficiencyCategory );
-  }
-  //setup the pdf category
-  RooMappedCategory pdfCategory("_pdfCategory_", "_pdfCategory_", allCats, (binToPDFmap.size()>0)?binToPDFmap[0].c_str():"all");
-  for(unsigned int i = 1; i<binToPDFmap.size(); i+=2){
-    pdfCategory.map(binToPDFmap[i].c_str(), binToPDFmap[i+1].c_str());
-  }
-  data.addColumn( pdfCategory );
   
-  //create the empty efficiency datasets from the binned variables
-  RooRealVar efficiency("efficiency", "Efficiency", 0, 1);
+  //  add all variables used in expressions
+  for(vector<pair<pair<string,string>, pair<string, vector<string> > > >::const_iterator ev = expressionVars.begin(), eve = expressionVars.end(); ev != eve; ++ev){
+    for (vector<string>::const_iterator it = ev->second.second.begin(), ed = ev->second.second.end(); it != ed; ++it) {
+      // provided that they are real variables themselves
+      if (variables.find(it->c_str())) dataVars.addClone(variables[it->c_str()], true);
+    }
+  }
+  
+  // add all real variables used in cuts
+  for(vector<pair<pair<string,string>, pair<string, double> > >::const_iterator tc = thresholdCategories.begin(), tce = thresholdCategories.end(); tc != tce; ++tc){
+    if (variables.find(tc->second.first.c_str())) dataVars.addClone(variables[tc->second.first.c_str()], true);
+  }
+   
+  // Now add all expressions that are computed dynamically
+  std::vector<std::string> dynamicCuts;
+  std::map<std::string, std::string> dynamicExpressions;
+  for(vector<pair<pair<string,string>, pair<string, vector<string> > > >::const_iterator ev = expressionVars.begin(), eve = expressionVars.end(); ev != eve; ++ev){
+    for (vector<string>::const_iterator it = ev->second.second.begin(), ed = ev->second.second.end(); it != ed; ++it) {
+      dynamicExpressions[ev->first.first] = ev->second.first;
+    }
+  }
+          
+  // And add all dynamic categories from thresholds 
+  std::string dynamicCutString = "1";
+  for(vector<pair<pair<string,string>, pair<string, double> > >::const_iterator tc = thresholdCategories.begin(), tce = thresholdCategories.end(); tc != tce; ++tc){
+    std::string cutName = tc->second.first.c_str();
+    if (dynamicExpressions.find(cutName) != dynamicExpressions.end())
+      cutName = "("+dynamicExpressions[cutName]+")";
 
-  RooDataSet fitEfficiency("fit_eff", "Efficiency from unbinned ML fit", RooArgSet(RooArgSet(binnedVariables, categories), efficiency), StoreAsymError(RooArgSet(binnedVariables, efficiency)));
-//  RooDataSet sbsEfficiency("sbs_eff", "Efficiency from side band substraction", RooArgSet(RooArgSet(binnedVariables, categories), efficiency), StoreAsymError(RooArgSet(binnedVariables, efficiency)));
-  RooDataSet cntEfficiency("cnt_eff", "Efficiency from counting", RooArgSet(RooArgSet(binnedVariables, categories), efficiency), StoreAsymError(RooArgSet(binnedVariables, efficiency)));
-
-
-  if(!floatShapeParameters){
-    //fitting whole dataset to get initial values for some parameters
-    RooWorkspace* w = new RooWorkspace();
-    w->import(data);
-    efficiency.setVal(0);//reset
-    efficiency.setAsymError(0,0);
-    std::cout << "ALL dataset: calling doFitEfficiency with pdf: " << pdfCategory.getLabel() << std::endl;
-    doFitEfficiency(w, pdfCategory.getLabel(), efficiency);
-    delete w;
+    if (tc->first.second == "above")
+      sprintf(aChar, "%s>%f", cutName.c_str(), tc->second.second);
+    else
+      sprintf(aChar, "%s<%f", cutName.c_str(), tc->second.second);
+    
+    dynamicCuts.push_back(aChar);
+    dynamicCutString += " && " + dynamicCuts.back();
   }
 
-  //loop over all bins with the help of allCats
-  TIterator* it = allCats.typeIterator();
-  for(RooCatType* t = (RooCatType*)it->Next(); t!=0; t = (RooCatType*)it->Next() ){
-    //name of the multicategory
-    TString catName = t->GetName();
-    //skip unmapped states
-    if(catName.Contains("NotMapped")) continue;
+  // NEED TO HANDLE 1D case
+  std::vector<std::string> pdfNames;
+  std::vector<std::string> categorySelection;
+  std::vector<std::string> catNames;
+
+  int nCats = 0;
+  for (unsigned int i=0; i<binnedCategories[0].size(); i++) {
+    for (unsigned int j=0; j<binnedCategories[1].size(); j++) {
+
+      unsigned int pdfIndex = (i*binnedCategories[1].size()+j+1)*2;
+
+      if (pdfIndex > binToPDFmap.size())
+	pdfNames.push_back(binToPDFmap[0]);
+      else
+	pdfNames.push_back(binToPDFmap[pdfIndex]);
+
+      categorySelection.push_back(binnedCategories[0][i]+" && " + binnedCategories[1][j]+ " && " + dynamicCutString);
+      
+      sprintf(aChar, "%s_bin%d__%s_bin%d", binnedVariableNames[0].c_str(), i, binnedVariableNames[1].c_str(), j);
+      catNames.push_back(aChar);
+
+      nCats++;
+    }
+  }
+  
+  std::vector<TTree*> trees;
+  std::vector<TTreeFormula*> formulas;
+
+  TString rootInputFile(inputTree->GetFile()->GetName());
+  TObjArray *tx = rootInputFile.Tokenize("/");
+  TString basename = ((TObjString *)(tx->Last()))->String().ReplaceAll(".root", "");
+  std::string treeDirectory = std::string(basename.Data())+"_"+effCats[0]+"_"+catNames.back();
+  
+  struct stat sb;
+  if (stat(treeDirectory.c_str(), &sb) != 0) { // && S_ISDIR(sb.st_mode)) {   
+ 
+    std::map<std::string, float> treeVarsF;
+    std::map<std::string, double> treeVarsD;
+    std::map<std::string, int> treeVarsI;
+    
+    inputTree->SetBranchStatus("*", 0);
+    TIterator* vit = dataVars.createIterator();
+    for(RooRealVar* v = (RooRealVar*)vit->Next(); v!=0; v = (RooRealVar*)vit->Next() ){
+      inputTree->SetBranchStatus(v->GetName(), 1);
+      
+      if (strcmp(inputTree->GetLeaf(v->GetName())->GetTypeName(), "Float_t") == 0)
+	inputTree->SetBranchAddress(v->GetName(), &(treeVarsF[v->GetName()]));
+      else if (strcmp(inputTree->GetLeaf(v->GetName())->GetTypeName(), "Double_t") == 0)
+	inputTree->SetBranchAddress(v->GetName(), &(treeVarsD[v->GetName()]));
+      else if (strcmp(inputTree->GetLeaf(v->GetName())->GetTypeName(), "Int_t") == 0)
+	inputTree->SetBranchAddress(v->GetName(), &(treeVarsI[v->GetName()]));
+    }
+
+    mkdir(treeDirectory.c_str(), S_IRUSR | S_IWUSR | S_IXUSR);
+    outputTemp = new TFile((treeDirectory+std::string("/temp.root")).c_str(), "recreate");
+    for (int category=0; category<nCats; category++) {
+      trees.push_back(inputTree->CloneTree(0));
+      sprintf(aChar, "formula%d", category);
+      formulas.push_back(new TTreeFormula(aChar, categorySelection[category].c_str(), inputTree));
+    }
+  
+    std::cout << "Splitting original tree according to chosen categorization..." << std::endl;
+    for (int z=0; z<inputTree->GetEntries(); z++) {
+      //if (z % 100000 == 0)
+      //std::cout << z << std::endl;
+      inputTree->GetEntry(z);
+      int chosenCat = -1;
+      for (int i=0; i<nCats; i++) {
+	if (formulas[i]->EvalInstance() != 0 ) {
+	  chosenCat = i;
+	  break;
+	}
+      }
+      
+      if (chosenCat != -1) {
+	trees[chosenCat]->Fill();
+      }
+    }
+    
+    outputTemp->cd();
+    for (unsigned int i=0; i<trees.size(); i++) {
+      sprintf(aChar, "tree_cat%d", i);
+      trees[i]->SetName(aChar);
+      trees[i]->Write();
+    }  
+    outputTemp->Close();
+  }
+  
+  outputTemp = TFile::Open((treeDirectory+std::string("/temp.root")).c_str());
+  outputTemp->cd();
+  trees.resize(0);
+  for (int i=0; i<nCats; i++) {
+    sprintf(aChar, "tree_cat%d", i);
+    trees.push_back((TTree*)outputTemp->Get(aChar));
+  }  
+
+  delete inputTree;
+  outputDirectory->cd();
+  gDirectory->cd(dirName.c_str());
+
+  //create the empty efficiency datasets from the binned variables
+  RooRealVar efficiency("efficiency", "Efficiency", 0, 1); 
+  RooDataSet fitEfficiency("fit_eff", "Efficiency from unbinned ML fit", RooArgSet(RooArgSet(binnedVariables, categories), efficiency), StoreAsymError(RooArgSet(binnedVariables, efficiency)));
+  RooDataSet cntEfficiency("cnt_eff", "Efficiency from counting", RooArgSet(RooArgSet(binnedVariables, categories), efficiency), StoreAsymError(RooArgSet(binnedVariables, efficiency)));
+  
+  string effName;   
+  for (int category=0; category<nCats; category++) {
+    
     //create the dataset
-    RooAbsData* data_bin = (RooDataSet*) data.reduce(Cut(TString::Format("allCats==%d",t->getVal())));
-    //set the category variables by reading the first event
-    const RooArgSet* row = data_bin->get();
+    RooDataSet* data = new RooDataSet("data", "data", trees[category], dataVars, categorySelection[category].c_str(), (weightVar.empty() ? 0 : weightVar.c_str()));
+    
+    if(!floatShapeParameters) {
+      //fitting whole dataset to get initial values for some parameters
+      RooWorkspace* w = new RooWorkspace();
+      w->import(*(data->get(0)));
+      efficiency.setVal(0);//reset
+      efficiency.setAsymError(0,0);
+      doFitEfficiency(w, data, pdfNames[category], efficiency);
+      delete w;
+    }
 
-    //get PDF name
-    TString pdfName(((RooCategory*)row->find("_pdfCategory_"))->getLabel());
-
-
-    //make directory name
-    TString dirName = catName;
+    //get PDF name and make directory name
+    TString dirName = catNames[category];
     dirName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","__");
-    if(pdfName.Length() > 0){
-      dirName.Append("__").Append(pdfName);
+    if(pdfNames[category].size() > 0){
+      dirName.Append("__").Append(pdfNames[category]);
     }
     
     cout<<"Fitting bin:  "<<dirName<<endl;
     //make a directory for each bin
     gDirectory->mkdir(dirName)->cd();
+    
+    //setup the efficiency category
+    if (effCats.size() == 1) {
+      effName = effCats.front() + "::" + effStates.front();
+      RooMappedCategory efficiencyCategory("_efficiencyCategory_", "_efficiencyCategory_", (RooCategory&)dataVars[effCats.front().c_str()], "Failed");
+      efficiencyCategory.map(effStates.front().c_str(), "Passed");
+      data->addColumn( efficiencyCategory );
+      //w->import(efficiencyCategory);
+    } else {
+      RooArgSet rooEffCats; 
+      string multiState = "{";
+      for (size_t i = 0; i < effCats.size(); ++i) {
+	if (i) { multiState += ";"; effName += " && "; }
+	rooEffCats.add((RooCategory &) dataVars[effCats[i].c_str()]);
+	multiState += effStates[i];
+	effName = effCats[i] + "::" + effStates[i];
+      }
+      multiState += "}";
+      RooMultiCategory efficiencyMultiCategory("_efficiencyMultiCategory_", "_efficiencyMultiCategory_", rooEffCats);
+      RooMappedCategory efficiencyCategory("_efficiencyCategory_", "_efficiencyCategory_", efficiencyMultiCategory, "Failed");
+      efficiencyCategory.map(multiState.c_str(), "Passed");
+      data->addColumn( efficiencyCategory );
+    }
 
-
-    //create a workspace
     RooWorkspace* w = new RooWorkspace();
     //import the data
-    w->import(*data_bin);
-    delete data_bin; // clean up earlier
-    data_bin = w->data("data"); // point to the data that's in the workspace now (saves memory)
+    w->import(*(data->get(0)));
+    saveDistributionsPlot(w, data);
 
-    //save the distribution of variables
-    if (doSaveDistributionsPlot) saveDistributionsPlot(w);
-    //do the fitting only if there is sufficient number of events
-    if(data_bin->numEntries()>0){
+    if(data->numEntries() > 0) {
       //set the values of binnedVariables to the mean value in this data bin
       RooArgSet meanOfVariables;
-      RooLinkedListIter vit = binnedVariables.iterator();
-      for(RooRealVar* v = (RooRealVar*)vit.Next(); v!=0; v = (RooRealVar*)vit.Next() ){
-        meanOfVariables.addClone(*v);
-        double mean = w->data("data")->mean(*v);
-        RooBinning binning((RooBinning&)v->getBinning());
-        int ind = binning.binNumber(mean);
-        RooRealVar& newVar = (RooRealVar&)meanOfVariables[v->GetName()];
-        newVar.setVal(mean);
-        newVar.setAsymError(binning.binLow(ind)-mean, binning.binHigh(ind)-mean);
+      TIterator* vit = binnedVariables.createIterator();
+      for(RooRealVar* v = (RooRealVar*)vit->Next(); v!=0; v = (RooRealVar*)vit->Next() ){
+	meanOfVariables.addClone(*v);
+      	double mean = data->mean(*v);
+      	RooBinning binning((RooBinning&)v->getBinning());
+      	int ind = binning.binNumber(mean);
+      	RooRealVar& newVar = (RooRealVar&)meanOfVariables[v->GetName()];
+      	newVar.setVal(mean);
+      	newVar.setAsymError(binning.binLow(ind)-mean, binning.binHigh(ind)-mean);
       }
-  
+      delete vit;
+
       //put an entry in the efficiency dataset
-      //note that the category values are coming from data_bin->get(0)
-      meanOfVariables.addClone(*data_bin->get(0), true); 
-
-      efficiency.setVal(0);//reset
+      //note that the category values are coming from data->get(0)
+      meanOfVariables.addClone(*data->get(0), true);     
+      efficiency.setVal(0); //reset
       efficiency.setAsymError(0,0);
-      doFitEfficiency(w, pdfName.Data(), efficiency);
-      fitEfficiency.add( RooArgSet(meanOfVariables, efficiency) );
-
-/*      efficiency.setVal(0);//reset
-      doSBSEfficiency(w, efficiency);
-      sbsEfficiency.add( RooArgSet(meanOfVariables, efficiency) );*/
-
-      efficiency.setVal(0);//reset
-      doCntEfficiency(w, efficiency);
-      cntEfficiency.add( RooArgSet(meanOfVariables, efficiency) );
+      
+      if (docutandcount) {
+      	doCntEfficiency(w, efficiency);
+      	cntEfficiency.add( RooArgSet(meanOfVariables, efficiency) );
+      } else {
+	doFitEfficiency(w, data, pdfNames[category], efficiency);
+	fitEfficiency.add( RooArgSet(meanOfVariables, efficiency) );
+      }
     }
+
     //save the workspace if requested
     if(saveWorkspace){
       w->Write("w");
     }
+    
     //clean up
+    delete data;
     delete w;
+
     //get back to the initial directory
     gDirectory->cd("..");
   }
   
-  //save the efficiency data
-  fitEfficiency.Write();
-  gDirectory->mkdir("fit_eff_plots")->cd();
-  saveEfficiencyPlots(fitEfficiency, effName, binnedVariables, mappedCategories);
-  gDirectory->cd("..");
-
-/*  sbsEfficiency.Write();
-  gDirectory->mkdir("sbs_eff_plots")->cd();
-  saveEfficiencyPlots(sbsEfficiency, effCat+"::"+effState, binnedVariables, mappedCategories);
-  gDirectory->cd("..");*/
-
-  cntEfficiency.Write();
-  gDirectory->mkdir("cnt_eff_plots")->cd();
-  saveEfficiencyPlots(cntEfficiency, effName, binnedVariables, mappedCategories);
-  gDirectory->cd("..");
+  if (docutandcount) {
+    //cntEfficiency.Write();
+    gDirectory->mkdir("cnt_eff_plots")->cd();
+    saveEfficiencyPlots(cntEfficiency, effName, binnedVariables, mappedCategories);
+    gDirectory->cd("..");
+  } else {
+    //fitEfficiency.Write();
+    gDirectory->mkdir("fit_eff_plots")->cd();
+    saveEfficiencyPlots(fitEfficiency, effName, binnedVariables, mappedCategories);
+    gDirectory->cd("..");
+  }
+  
   //empty string means no error
   return "";
 }
 
-void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar& efficiency){
+void TagProbeFitter::doFitEfficiency(RooWorkspace* w, RooAbsData* data, string pdfName, RooRealVar& efficiency) {
+  
   //if pdfName is empty skip the fit
-  if(pdfName == "all"){
+  if(pdfName == ""){
     return;
   }
+
   //create the simultaneous pdf of name pdfName
   createPdf(w, pdfs[pdfName]);
   //set the initial values for the yields of signal and background
-  setInitialValues(w);  
-  std::auto_ptr<RooFitResult> res(0);
+  setInitialValues(w, data);  
+  RooFitResult* res = 0;
   
-  RooAbsData *data = w->data("data");
-  std::auto_ptr<RooDataHist> bdata;
   if (binnedFit) { 
     // get variables from data, which contain also other binning or expression variables
     const RooArgSet *dataObs = data->get(0); 
     // remove everything which is not a dependency of the pdf
     RooArgSet *obs = w->pdf("simPdf")->getObservables(dataObs);
-    bdata.reset(new RooDataHist("data_binned", "data_binned", *obs, *data)); 
+    RooDataHist *bdata = new RooDataHist("data_binned", "data_binned", *obs, *data);
+    
     w->import(*bdata);
-    data = w->data("data_binned");
+    data = bdata;
     delete obs;
   }
 
   double totPassing = data->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Passed");
   double totFailing = data->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Failed");
-
-  RooAbsReal* simNLL = w->pdf("simPdf")->createNLL(*data,Extended(true),NumCPU(numCPU));
   
-  RooMinimizer minimizer(*simNLL); // we are going to use this for 'scan'
-  RooMinuit minuit(*simNLL);
-  minuit.setStrategy(1);
-  minuit.setProfile(true);
-  RooProfileLL profileLL("simPdfNLL","",*simNLL,*w->var("efficiency"));
-  
-
   //******* The block of code below is to make the fit converge faster.
   // ****** This part is OPTIONAL, i.e., off be default. User can activate this
   // ****** by setting the following parameters: "fixVars" and "floatShapeParameters"
@@ -422,8 +496,7 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
   ////    ---> if "floatShapeParameters==false" && "fixVars is NOT empty" : 
   ///              Perform a global fit to the whole sample, save the fitted values of the 
   ///              user specified parameters, and fix them for bin-by-bin fit. 
-
-      
+  
   if(!fixVars.empty()){
     // calculate initial values for parameters user want to fix
     if(!floatShapeParameters && fixVarValues.empty()){
@@ -433,25 +506,14 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
       // ----------------------------------------------------------------------
       // This procedure works only once with a whole dataset (without binning)
       // ----------------------------------------------------------------------
-
       // fix them
       varFixer(w,true);
       //do fit 
-      minimizer.minimize("Minuit2","Scan");
-      minuit.migrad();
-      minuit.hesse();
-      //minuit.minos();
-      //w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Strategy(2),
-      //PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+      w->pdf("simPdf")->fitTo(*data, Minimizer("migrad"), Save(true), SumW2Error(true), Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:0), PrintEvalErrors(quiet?-1:1));
       //release vars
       varFixer(w,false);
       //do fit 
-      minimizer.minimize("Minuit2","Scan");      
-      minuit.migrad();
-      minuit.hesse();
-      //minuit.minos();
-      //w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Strategy(2),
-      //PrintLevel(quiet?-1:1), PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
+      w->pdf("simPdf")->fitTo(*data, Minimizer("migrad"), Save(true), SumW2Error(true) , Extended(true), NumCPU(numCPU), PrintLevel(quiet?-1:0), PrintEvalErrors(quiet?-1:1));
       //save vars
       varSaver(w);
       // now we have a starting point. Fit will converge faster.
@@ -459,58 +521,50 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
     
     // here we can use initial values if we want (this works for each bin)
     if(!floatShapeParameters) varRestorer(w);  //restore vars
-
+    
+    // if we don't want to "floatShapeParameters" we just fix, fit, 
+    //  release, and fit again. No need for global fitting above.
+    //fix vars
+    varFixer(w,true);
     //do fit
-    minimizer.minimize("Minuit2","Scan");
-    minuit.migrad();
-    minuit.hesse();
-    // initialize the profile likelihood
-    profileLL.getVal();
-    RooMinimizer* profMinuit = profileLL.minimizer();
-    profMinuit->setProfile(true);
-    profMinuit->setStrategy(2);     
-    profMinuit->setPrintLevel(1);
-    profMinuit->minos(*w->var("efficiency"));
-    res.reset( profMinuit->save() );
-    //res = w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Strategy(2),
-    //Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), 
-    //PrintEvalErrors(quiet?-1:1), Warnings(!quiet));
-  }//if(!fixVars.empty())
-      
-  // (default = true) if we don't want to fix any parameters or want to fit each bin with all parameters floating
-  if(floatShapeParameters){
+    res = w->pdf("simPdf")->fitTo(*data, Save(true), Hesse(false), Extended(true), NumCPU(numCPU), Minos(*w->var("efficiency")), PrintLevel(quiet?-1:0), PrintEvalErrors(quiet?-1:1), SumW2Error(true));
+  } else {
     //release vars
     varFixer(w,false);
     
     //do fit
-    minimizer.minimize("Minuit2","Scan");
-    minuit.migrad();
-    minuit.hesse();
-    res.reset( w->pdf("simPdf")->fitTo(*data, Save(true), Extended(true), NumCPU(numCPU), Strategy(2),
-                                    Minos(*w->var("efficiency")), PrintLevel(quiet?-1:1), 
-      				  PrintEvalErrors(quiet?-1:1), Warnings(!quiet)) );
-   }
-
-
-
+    res = w->pdf("simPdf")->fitTo(*data, Save(true), Hesse(false),Extended(true), Minos(*w->var("efficiency")), Strategy(2), PrintEvalErrors(quiet?-1:1), NumCPU(numCPU), SumW2Error(true));
+  }
+  
   // save everything
   res->Write("fitresults");
   w->saveSnapshot("finalState",w->components());
   saveFitPlot(w);
+
   //extract the efficiency parameter from the results
   RooRealVar* e = (RooRealVar*) res->floatParsFinal().find("efficiency");
-  //What's wrong with this? and why don't they copy the errors!
-  //efficiency = *e;
   efficiency.setVal(e->getVal());
   Double_t errLo = e->getErrorLo(), errHi = e->getErrorHi();
-  if (errLo == 0 && e->getVal() < 0.5) errLo = e->getMin()-e->getVal();
-  if (errHi == 0 && e->getVal() > 0.5) errHi = e->getMax()-e->getVal();
-  efficiency.setAsymError(errLo, errHi);
+  
+  if (errLo == 0 or errHi == 0) {
+    float numSignal = ((RooRealVar*) res->floatParsFinal().find("numSignalAll"))->getVal();
+    float pass = numSignal*e->getVal();
+    float fail = numSignal*(1-e->getVal());
+    
+    // Use Clopper-Pearson           
+    double alpha = (1.0 - .68540158589942957)/2;
+    double lo = (pass == 0) ? 0.0 : ROOT::Math::beta_quantile(   alpha, pass,   fail+1 );
+    double hi = (fail == 0) ? 1.0 : ROOT::Math::beta_quantile( 1-alpha, pass+1, fail   );
+    
+    efficiency.setAsymError(lo-e->getVal(), hi-e->getVal());
+  } else {
+    efficiency.setAsymError(errLo, errHi);
+  }
 
   if (totPassing * totFailing == 0) {
-   RooRealVar* nTot = (RooRealVar*) res->floatParsFinal().find("numTot");
-   RooRealVar* fSig = (RooRealVar*) res->floatParsFinal().find("fSigAll");
-   double cerr = ROOT::Math::beta_quantile( 1-(1.0-.68540158589942957)/2, 1, nTot->getVal() * fSig->getVal() ); 
+    RooRealVar* nS = (RooRealVar*) res->floatParsFinal().find("numSignalAll");
+    //RooRealVar* nB = (RooRealVar*) res->floatParsFinal().find(totPassing != 0 ? "numBackgroundPass" : "numBackgroundFail");
+    double cerr = ROOT::Math::beta_quantile( 1-(1.0-.68540158589942957)/2, 1, nS->getVal() ); 
     /*
     std::cout << "======================================================================================" << std::endl;
     std::cout << "======= totPassing "  << totPassing << ", totFailing " << totFailing << std::endl;
@@ -528,44 +582,46 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
       efficiency.setAsymError(-cerr,0);
     }
   }
-
-  delete simNLL;
 }
 
 void TagProbeFitter::createPdf(RooWorkspace* w, vector<string>& pdfCommands){
+
   // create the signal and background pdfs defined by the user
   for(unsigned int i=0; i<pdfCommands.size(); i++){
     const std::string & command = pdfCommands[i];
+    
     if (command.find("#import ") == 0) {
-        TDirectory *here = gDirectory;
-        w->import(command.substr(8).c_str());
-        here->cd();
-    } else {
       TDirectory *here = gDirectory;
+      w->import(command.substr(8).c_str());
+      here->cd();
+    } else if (command.find("Templated") == 0) {
+      w->factory(command.c_str());
+      w->Print();
+      
+    } else {
+      TDirectory *here = gDirectory; 
       w->factory(command.c_str());
       here->cd();
     }
-  }
+  } 
+  
   // setup the simultaneous extended pdf
-
-  w->factory("expr::nSignalPass('efficiency*fSigAll*numTot', efficiency, fSigAll[.9,0,1],numTot[1,0,1e10])");
-  w->factory("expr::nSignalFail('(1-efficiency)*fSigAll*numTot', efficiency, fSigAll,numTot)");  
-  w->factory("expr::nBkgPass('effBkg*(1-fSigAll)*numTot', effBkg[.9,0,1],fSigAll,numTot)");
-  w->factory("expr::nBkgFail('(1-effBkg)*(1-fSigAll)*numTot', effBkg,fSigAll,numTot)");  
+  w->factory("expr::numSignalPass('efficiency*numSignalAll', efficiency, numSignalAll[10.,10000000000])");
+  w->factory("expr::numSignalFail('(1-efficiency)*numSignalAll', efficiency, numSignalAll)");
   TString sPass = "signal", sFail = "signal";
   if (w->pdf("signalPass") != 0 && w->pdf("signalFail") != 0) {
     if (w->pdf("signal") != 0) throw std::logic_error("You must either define one 'signal' PDF or two PDFs ('signalPass', 'signalFail'), not both!"); 
     sPass = "signalPass"; sFail = "signalFail";
   } else if (w->pdf("signal") != 0) {
     if (w->pdf("signalPass") != 0 || w->pdf("signalFail") != 0) {
-        throw std::logic_error("You must either define one 'signal' PDF or two PDFs ('signalPass', 'signalFail'), not both!"); 
+      throw std::logic_error("You must either define one 'signal' PDF or two PDFs ('signalPass', 'signalFail'), not both!"); 
     }
   } else {
     throw std::logic_error("You must either define one 'signal' PDF or two PDFs ('signalPass', 'signalFail')");
   }
-  w->factory("SUM::pdfPass(nSignalPass*"+sPass+", nBkgPass*backgroundPass)"); //fBkgPass*
-  w->factory("SUM::pdfFail(nSignalFail*"+sFail+", nBkgFail*backgroundFail)"); //fBkgFail*
-
+  
+  w->factory("SUM::pdfPass(numSignalPass*"+sPass+", numBackgroundPass[0.,1000000000]*backgroundPass)");
+  w->factory("SUM::pdfFail(numSignalFail*"+sFail+", numBackgroundFail[0.,1000000000]*backgroundFail)");
   w->factory("SIMUL::simPdf(_efficiencyCategory_, Passed=pdfPass, Failed=pdfFail)");
   // signalFractionInPassing is not used in the fit just to set the initial values
   if (w->pdf("simPdf") == 0) throw std::runtime_error("Could not create simultaneous fit pdf.");
@@ -573,41 +629,58 @@ void TagProbeFitter::createPdf(RooWorkspace* w, vector<string>& pdfCommands){
     w->factory("signalFractionInPassing[0.9]");
 }
 
-void TagProbeFitter::setInitialValues(RooWorkspace* w){
+void TagProbeFitter::setInitialValues(RooWorkspace* w, RooAbsData* data){
   // calculate initial values
   double signalEfficiency = w->var("efficiency")->getVal();
   double signalFractionInPassing = w->var("signalFractionInPassing")->getVal();
-  double totPassing = w->data("data")->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Passed");
-  double totFailinging = w->data("data")->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Failed");
+  //double totPassing = w->data("data")->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Passed");
+  //double totFailinging = w->data("data")->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Failed");
+
+  double totPassing = data->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Passed");
+  double totFailinging = data->sumEntries("_efficiencyCategory_==_efficiencyCategory_::Failed");
+
   double numSignalAll = totPassing*signalFractionInPassing/signalEfficiency;
-
-  //std::cout << "Number of probes: " << totPassing+totFailinging << std::endl;
-
   // check if this value is inconsistent on the failing side
   if(numSignalAll*(1-signalEfficiency) > totFailinging)
     numSignalAll = totFailinging;
   // now set the values
-  w->var("numTot")->setVal(totPassing+totFailinging);
-  w->var("numTot")->setMax(2.0*(totPassing+totFailinging)+10); //wiggle room in case of 0 events in bin
-
+  w->var("numSignalAll")->setVal(numSignalAll);
+  w->var("numBackgroundPass")->setVal(totPassing - numSignalAll*signalEfficiency);
+  w->var("numBackgroundFail")->setVal(totFailinging -  numSignalAll*(1-signalEfficiency));
+  
   if (totPassing == 0) {
     w->var("efficiency")->setVal(0.0);
     w->var("efficiency")->setAsymError(0,1);
     w->var("efficiency")->setConstant(false);
+    w->var("numBackgroundPass")->setVal(0.0);
+    w->var("numBackgroundPass")->setConstant(true);
+    w->var("numBackgroundFail")->setConstant(false);
   } else if (totFailinging == 0) {
     w->var("efficiency")->setVal(1.0);
     w->var("efficiency")->setAsymError(-1,0);
     w->var("efficiency")->setConstant(false);
+    w->var("numBackgroundPass")->setConstant(false);
+    w->var("numBackgroundFail")->setVal(0.0);
+    w->var("numBackgroundFail")->setConstant(true);
   } else {
     w->var("efficiency")->setConstant(false);
+    w->var("numBackgroundPass")->setConstant(false);
+    w->var("numBackgroundFail")->setConstant(false);
   }
-
+  
   // if signal fraction is 1 then set the number of background events to 0.
-  //RooRealVar* fBkgPass = w->var("numBackgroundPass");
-  //if(signalFractionInPassing==1.0) { fBkgPass->setVal(0.0); fBkgPass->setConstant(true); }
-
+  RooRealVar* fBkgPass = w->var("numBackgroundPass");
+  RooRealVar* fBkgFail = w->var("numBackgroundFail");
+  if(signalFractionInPassing==1.0) { 
+    fBkgPass->setVal(0.0); 
+    fBkgPass->setConstant(true); 
+    fBkgFail->setVal(0.0); 
+    fBkgFail->setConstant(true); 
+  }
+  
   // save initial state for reference
-  w->saveSnapshot("initialState",w->components());
+  // FIXME
+  //w->saveSnapshot("initialState",w->components());
 }
 
 void TagProbeFitter::saveFitPlot(RooWorkspace* w){
@@ -617,10 +690,10 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w){
   RooAbsData* dataPass = dataAll->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Passed")); 
   RooAbsData* dataFail = dataAll->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Failed")); 
   RooAbsPdf& pdf = *w->pdf("simPdf");
-  std::auto_ptr<RooArgSet> obs(pdf.getObservables(*dataAll));
+  RooArgSet *obs = pdf.getObservables(*dataAll);
   RooRealVar* mass = 0;
-  RooLinkedListIter it = obs->iterator();
-  for(RooAbsArg* v = (RooAbsArg*)it.Next(); v!=0; v = (RooAbsArg*)it.Next() ){
+  TIterator* it = obs->createIterator();
+  for(RooAbsArg* v = (RooAbsArg*)it->Next(); v!=0; v = (RooAbsArg*)it->Next() ){
     if(!v->InheritsFrom("RooRealVar")) continue;
     mass = (RooRealVar*)v;
     break;
@@ -664,7 +737,6 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w){
   // draw only the parameter box not the whole frame
   frames.back()->findObject(Form("%s_paramBox",pdf.GetName()))->Draw();
   //save and clean up
-  canvas.Draw();
   canvas.Write();
   for (size_t i=0; i<frames.size(); i++) {
     delete frames[i];
@@ -673,16 +745,17 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w){
   delete dataFail;
 }
 
-void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w){
+void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w, RooAbsData* data) {
+  
   // save pointers to datasets to manage memory
-  RooAbsData* dataAll = w->data("data");
-  RooAbsData* dataPass = dataAll->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Passed")); 
-  RooAbsData* dataFail = dataAll->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Failed")); 
+  //RooAbsData* dataAll = w->data("data");
+  RooAbsData* dataPass = data->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Passed")); 
+  RooAbsData* dataFail = data->reduce(Cut("_efficiencyCategory_==_efficiencyCategory_::Failed")); 
 
-  const RooArgSet* vars = dataAll->get();
+  const RooArgSet* vars = data->get();
   vector<RooRealVar*> reals;
-  RooLinkedListIter it = vars->iterator();
-  for(RooAbsArg* v = (RooAbsArg*)it.Next(); v!=0; v = (RooAbsArg*)it.Next() ){
+  TIterator* it = vars->createIterator();
+  for(RooAbsArg* v = (RooAbsArg*)it->Next(); v!=0; v = (RooAbsArg*)it->Next() ){
     if(!v->InheritsFrom("RooRealVar")) continue;
     reals.push_back((RooRealVar*)v);
   }
@@ -705,11 +778,10 @@ void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w){
     // plot the All Probes
     canvas.cd(3*i+3);
     frames.push_back(reals[i]->frame(Name("All"), Title("All Probes"), Bins(100)));
-    dataAll->plotOn(frames.back(), LineColor(kBlue));
-    dataAll->statOn(frames.back());
+    data->plotOn(frames.back(), LineColor(kBlue));
+    data->statOn(frames.back());
     frames.back()->Draw();
   }
-  canvas.Draw();
   canvas.Write();
   for (size_t i=0; i<frames.size(); i++) {
     delete frames[i];
@@ -718,36 +790,36 @@ void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w){
   delete dataFail;
 }
 
-void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName, RooArgSet& binnedVariables,RooArgSet& mappedCategories){
-  RooLinkedListIter v1it = binnedVariables.iterator();
-  bool isOnePoint = (eff.numEntries() == 1); // for datasets with > 1 entry, we don't make plots for variables with just one bin
-  for(RooRealVar* v1 = (RooRealVar*)v1it.Next(); v1!=0; v1 = (RooRealVar*)v1it.Next() ){
+void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName, RooArgSet& binnedVariables, RooArgSet& mappedCategories){
+  TIterator* v1it = binnedVariables.createIterator();
+  for(RooRealVar* v1 = (RooRealVar*)v1it->Next(); v1!=0; v1 = (RooRealVar*)v1it->Next() ){
     RooArgSet binCategories1D;
-    if (v1->numBins() == 1 && !isOnePoint) continue;
-    RooLinkedListIter v2it = binnedVariables.iterator();
-    for(RooRealVar* v2 = (RooRealVar*)v2it.Next(); v2!=0; v2 = (RooRealVar*)v2it.Next() ){
+    TIterator* v2it = binnedVariables.createIterator();
+    for(RooRealVar* v2 = (RooRealVar*)v2it->Next(); v2!=0; v2 = (RooRealVar*)v2it->Next() ){
       if(v2 == v1) continue;
-      if (v2->numBins() == 1 && !isOnePoint) continue;
       binCategories1D.addClone( RooBinningCategory(TString(v2->GetName())+"_bins", TString(v2->GetName())+"_bins", *v2) );
 
       RooArgSet binCategories2D;
-      RooLinkedListIter v3it = binnedVariables.iterator();
-      for(RooRealVar* v3 = (RooRealVar*)v3it.Next(); v3!=0; v3 = (RooRealVar*)v3it.Next() ){
+      TIterator* v3it = binnedVariables.createIterator();
+      for(RooRealVar* v3 = (RooRealVar*)v3it->Next(); v3!=0; v3 = (RooRealVar*)v3it->Next() ){
         if(v3 == v1 || v3 == v2) continue;
         binCategories2D.addClone( RooBinningCategory(TString(v3->GetName())+"_bins", TString(v3->GetName())+"_bins", *v3) );
       }  
       RooMultiCategory allCats2D("allCats2D", "allCats2D", RooArgSet(binCategories2D, mappedCategories));
       if(allCats2D.numTypes()==0){
         makeEfficiencyPlot2D(eff, *v1, *v2, TString::Format("%s_%s_PLOT", v1->GetName(), v2->GetName()), "", effName);
-      }else{
+      } else {
         RooDataSet myEff(eff);
         myEff.addColumn(allCats2D);
-        std::auto_ptr<TIterator> catIt(allCats2D.typeIterator());
+        TIterator* catIt = allCats2D.typeIterator();
         for(RooCatType* t = (RooCatType*)catIt->Next(); t!=0; t = (RooCatType*)catIt->Next() ){
           TString catName = t->GetName();
-          if(catName.Contains("NotMapped")) continue;
+          if(catName.Contains("NotMapped")) 
+	    continue;
           catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_&_");
-          makeEfficiencyPlot2D(myEff, *v1, *v2, TString::Format("%s_%s_PLOT_%s",v1->GetName(), v2->GetName(), catName.Data()), catName, effName, "allCats1D", t->getVal());
+          //RooDataSet* eff_bin = (RooDataSet*) myEff.reduce( Cut(TString::Format("allCats2D==%d",t->getVal())) );       
+          makeEfficiencyPlot2D(myEff, *v1, *v2, TString::Format("%s_%s_PLOT_%s",v1->GetName(), v2->GetName(), catName.Data()), catName, effName);
+          //delete eff_bin;
         }        
       }
     }
@@ -757,47 +829,74 @@ void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName
     }else{
       RooDataSet myEff(eff);
       myEff.addColumn(allCats1D);
-      std::auto_ptr<TIterator> catIt(allCats1D.typeIterator());
+      TIterator* catIt = allCats1D.typeIterator();
       for(RooCatType* t = (RooCatType*)catIt->Next(); t!=0; t = (RooCatType*)catIt->Next() ){
         TString catName = t->GetName();
-        if(catName.Contains("NotMapped")) continue;
-        catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_&_");
-        makeEfficiencyPlot1D(myEff, *v1, TString::Format("%s_PLOT_%s", v1->GetName(), catName.Data()), catName, effName, "allCats1D", t->getVal());
+        if(catName.Contains("NotMapped")) 
+	  continue;
+        catName.ReplaceAll("{","").ReplaceAll("}","").ReplaceAll(";","_and_");
+        //RooDataSet* eff_bin = (RooDataSet*) myEff.reduce( Cut(TString::Format("allCats1D==%d",t->getVal())) );
+        makeEfficiencyPlot1D(myEff, *v1, TString::Format("%s_PLOT_%s", v1->GetName(), catName.Data()), catName, effName);
+        //delete eff_bin;
       }
     }
   }
 }
 
-void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName, const char *catName, int catIndex){
- TGraphAsymmErrors *p = new TGraphAsymmErrors();
-  const RooArgSet *entry = eff.get();
-  const RooRealVar &vi = dynamic_cast<const RooRealVar &>(*entry->find(v.GetName()));
-  const RooRealVar &ei = dynamic_cast<const RooRealVar &>(*entry->find("efficiency"));
-  for (unsigned int i = 0, n = eff.numEntries(); i < n; ++i) {
-    entry = eff.get(i); 
-    if (catName != 0 && entry->getCatIndex(catName) != catIndex) continue;
-    int j = p->GetN(); p->Set(j+1);
-    p->SetPoint(j, vi.getVal(), ei.getVal() );
-    p->SetPointError(j, -vi.getAsymErrorLo(), vi.getAsymErrorHi(), -ei.getAsymErrorLo(), ei.getAsymErrorHi() );
-  }
+void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const TString& plotName, const TString& plotTitle, const TString& effName){
+
+  // FIXME x axis error bars are strange
+ 
+  //TCanvas canvas(plotName);
+  //const RooArgSet* set = eff.get();
+  //RooRealVar* e = (RooRealVar*) set->find("efficiency");
+  //RooPlot* p = v.frame(Name(plotName), Title(plotTitle));
+  //eff.plotOnXY(p,YVar(*e));
+  //p->SetYTitle(TString("Efficiency of ")+effName);
+  //p->SetAxisRange(0,1,"Y");
+  //p->Draw();
+  //canvas.Write();
+  //delete p;  
+
+  //dataVars.Print();
   TCanvas canvas(plotName);
-  TH1F *frame = new TH1F("frame", "Efficiency of "+effName, 1, v.getMin(), v.getMax()); frame->SetDirectory(0);
-  p->SetNameTitle(Form("hxy_%s", eff.GetName()), "Efficiency of "+effName);
-  p->GetXaxis()->SetTitle(strlen(v.getUnit()) ? Form("%s (%s)", v.GetName(), v.getUnit()) : v.GetName());
-  p->GetYaxis()->SetTitle("Efficiency of "+effName);
-  frame->GetXaxis()->SetTitle(strlen(v.getUnit()) ? Form("%s (%s)", v.GetName(), v.getUnit()) : v.GetName());
-  frame->GetYaxis()->SetTitle("Efficiency of "+effName);
-  frame->GetYaxis()->SetRangeUser(0,1);
-  frame->Draw();
-  p->SetLineWidth(2); p->SetMarkerStyle(kFullCircle); p->SetMarkerSize(1.2);
-  p->Draw("P SAME");
+  const RooArgSet* set = eff.get();
+  RooRealVar* e = (RooRealVar*) set->find("efficiency");
+  RooRealVar* x = (RooRealVar*) set->find(v.GetName());
+  
+  Float_t xArray[eff.numEntries()];
+  Float_t yArray[eff.numEntries()];
+  //Float_t errxLowArray[eff.numEntries()];
+  //Float_t errxHighArray[eff.numEntries()];
+  Float_t erryLowArray[eff.numEntries()];
+  Float_t erryHighArray[eff.numEntries()];
+      
+  for (int i=0; i<eff.numEntries(); i++) {
+    eff.get(i);
+    xArray[i] = x->getVal();
+    yArray[i] = e->getVal();
+    erryLowArray[i] = fabs(e->getErrorLo());
+    erryHighArray[i] = e->getErrorHi();
+    //errxLowArray[i] = fabs(x->getErrorLo());
+    //erryHighArray[i] = x->getErrorHi();
+  }
+  canvas.cd();
+  TGraphAsymmErrors* g = new TGraphAsymmErrors(eff.numEntries(), xArray, yArray, 0, 0, erryLowArray, erryHighArray);
+  //TGraphAsymmErrors* g = new TGraphAsymmErrors(eff.numEntries(), xArray, yArray, errxLowArray, errxHighArray, erryLowArray, erryHighArray);
+
+  g->SetName(plotName);
+  g->SetTitle(plotTitle);
+  g->GetYaxis()->SetTitle(TString("Efficiency of ")+effName);
+  g->GetYaxis()->SetRangeUser(0,1);
+  g->SetMarkerStyle(20);
+  g->Draw("PAE");
   canvas.Write();
-  delete frame;
-  delete p;  
+  delete g;  
 }
 
-void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName, const char *catName, int catIndex){
- TCanvas canvas(plotName);
+void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName){
+  
+  TCanvas canvas(plotName);
   canvas.SetRightMargin(0.15);
   TH2F* h = new TH2F(plotName, plotName, v1.getBinning().numBins(), v1.getBinning().array(), v2.getBinning().numBins(), v2.getBinning().array());
   const RooArgSet* set = eff.get();
@@ -811,13 +910,11 @@ void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRe
   h->GetZaxis()->SetRangeUser(-0.001,1.001);
   h->SetStats(kFALSE);
   for(int i=0; i<eff.numEntries(); i++){
-    const RooArgSet *entry = eff.get(i); 
-    if (catName != 0 && entry->getCatIndex(catName) != catIndex) continue;
+    eff.get(i);
     h->SetBinContent(h->FindBin(v1_->getVal(), v2_->getVal()), e->getVal());
     h->SetBinError(h->FindBin(v1_->getVal(), v2_->getVal()), (e->getErrorHi()-e->getErrorLo())/2.);
   }
   h->Draw();
-  canvas.Draw();
   canvas.Write();
   delete h;
 }
@@ -867,7 +964,6 @@ void TagProbeFitter::varSaver(RooWorkspace* w){
 void TagProbeFitter::varRestorer(RooWorkspace* w){
   if(fixVarValues.size()==fixVars.size())
     for(unsigned int i=0; i< fixVars.size(); i++){
-      std::cout << "setting variable " << fixVars[i].c_str() << std::endl;
       w->var(fixVars[i].c_str())->setVal(fixVarValues[i]);
     }
   else{

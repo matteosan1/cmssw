@@ -12,12 +12,13 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
-#include "DataFormats/METReco/interface/MET.h"
-#include "DataFormats/METReco/interface/METCollection.h"
-#include "DataFormats/METReco/interface/CaloMET.h"
-#include "DataFormats/METReco/interface/CaloMETCollection.h"
-#include "DataFormats/METReco/interface/PFMET.h"
-#include "DataFormats/METReco/interface/PFMETCollection.h"
+
+#include "DataFormats/PatCandidates/interface/MET.h"
+
+//#include "DataFormats/Common/interface/MergeableDouble.h"
+
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -25,7 +26,13 @@
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h" 
+
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include <TTree.h>
+#include <TH1F.h>
 #include <boost/utility.hpp>
 
 
@@ -59,7 +66,7 @@ class ProbeVariable {
 
         /// To be called at the beginning of the event (will fetch ValueMap if needed)
         void init(const edm::Event &iEvent) const {
-            if (external_) iEvent.getByToken(srcToken_, handle_);
+	  if (external_) iEvent.getByToken(srcToken_, handle_);
         }
 
         /// To be called for each item
@@ -108,7 +115,7 @@ class ProbeFlag {
         const std::string & name() const { return name_; }
 
         /// To be called at the beginning of the event (will fetch Candidate View if needed)
-        void init(const edm::Event &iEvent) const ;
+        void init(const edm::Event &iEvent) const ;        
 
         /// To be called for each item
         void fill(const reco::CandidateBaseRef &probe) const ;
@@ -151,6 +158,7 @@ class BaseTreeFiller : boost::noncopyable {
 
         /// To be called once per event, to load possible external variables
         void init(const edm::Event &iEvent) const ;
+	void initPerObject(const edm::Event &iEvent) const ;
 
         /// To be called once per probe, to fill the values for this probe
         void fill(const reco::CandidateBaseRef &probe) const ;
@@ -158,9 +166,7 @@ class BaseTreeFiller : boost::noncopyable {
         /// Write a string dump of this PSet into the TTree header.
         /// see macro in test directory for how to retrieve it from the output root file
         void writeProvenance(const edm::ParameterSet &pset) const ;
-
-	//get the pileup weight informations
-	bool storePUweight() const {return storePUweight_;};
+	void addTotWeightBranch(double totGenWeight, double totEvents);
 
     protected:
 
@@ -170,13 +176,15 @@ class BaseTreeFiller : boost::noncopyable {
         /// How event weights are defined: 'None' = no weights, 'Fixed' = one value specified in cfg file, 'External' = read weight from the event (as double)
         enum WeightMode { None, Fixed, External };
         WeightMode weightMode_;
-        edm::EDGetTokenT<double> weightSrcToken_;
-	edm::EDGetTokenT<double> PUweightSrcToken_;
+        edm::EDGetTokenT<GenEventInfoProduct> weightSrcToken_;
         edm::EDGetTokenT<reco::VertexCollection> recVtxsToken_;
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
-        edm::EDGetTokenT<reco::CaloMETCollection> metToken_;
-        edm::EDGetTokenT<reco::METCollection> tcmetToken_;
-        edm::EDGetTokenT<reco::PFMETCollection> pfmetToken_;
+        edm::EDGetTokenT<pat::METCollection> pfmetToken_;
+	edm::EDGetTokenT<double> rhoToken_;
+        edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken_;
+	edm::EDGetTokenT<double> PUweightSrc_;
+	//edm::EDGetTokenT<edm::MergeableDouble> totGenWeightToken_;
+	bool storePUweight_;
 
         /// Ignore exceptions when evaluating variables
         bool ignoreExceptions_;
@@ -184,25 +192,28 @@ class BaseTreeFiller : boost::noncopyable {
         /// Add branches with run and lumisection number
         bool addRunLumiInfo_;
 
-	/// Store Pileup weight when running over Monte Carlo
-	bool storePUweight_;
-
         /// Add branches with event variables: met, sum ET, .. etc.
 	bool addEventVariablesInfo_;
-
+	bool saveBeamSpot_;
+	bool saveMET_;
+	bool saveRho_;
         void addBranches_(TTree *tree, const edm::ParameterSet &iConfig, edm::ConsumesCollector & iC, const std::string &branchNamePrefix="") ;
+
+	edm::Service<TFileService> fs;
 
         //implementation notice: these two are 'mutable' because we will fill them from a 'const' method
         mutable TTree * tree_;
-        mutable float weight_;
-	mutable float PUweight_;
+        mutable double weight_;
         mutable uint32_t run_, lumi_, mNPV_;
         mutable uint64_t event_;
-
+	mutable double PUweight_;
+	mutable std::vector<std::string> weightsToCombine_;
+	mutable double totWeight_;
+	mutable int truePU_;
+	
         mutable float mPVx_,mPVy_,mPVz_,mBSx_,mBSy_,mBSz_;
-
-        mutable float mMET_,mSumET_,mMETSign_,mtcMET_,mtcSumET_,
-	  mtcMETSign_,mpfMET_,mpfSumET_,mpfMETSign_;
+	mutable float mpfMET_,mpfSumET_,mpfPhi_;
+	mutable float rho_;
 };
 
 

@@ -29,6 +29,7 @@ TagProbeFitTreeAnalyzer::TagProbeFitTreeAnalyzer(const edm::ParameterSet& pset):
           pset.getParameter<string>("OutputFileName"),
           pset.existsAs<unsigned int>("NumCPU")?pset.getParameter<unsigned int>("NumCPU"):1,
           pset.existsAs<bool>("SaveWorkspace")?pset.getParameter<bool>("SaveWorkspace"):false,
+          pset.existsAs<bool>("doCutAndCount")?pset.getParameter<bool>("doCutAndCount"):false,
 	  pset.existsAs<bool>("floatShapeParameters")?pset.getParameter<bool>("floatShapeParameters"):true,
 	  pset.existsAs<vector<string> >("fixVars")?pset.getParameter<vector<string> >("fixVars"):vector<string>()
 	  )
@@ -42,9 +43,6 @@ TagProbeFitTreeAnalyzer::TagProbeFitTreeAnalyzer(const edm::ParameterSet& pset):
     fitter.setBinsForMassPlots(pset.getParameter<uint32_t>("binsForMassPlots"));
   }
 
-  if (pset.existsAs<bool>("saveDistributionsPlot")) {
-    fitter.setSaveDistributionsPlot(pset.getParameter<bool>("saveDistributionsPlot"));
-  }
   if (pset.existsAs<std::string>("WeightVariable")) {
     fitter.setWeightVar(pset.getParameter<std::string>("WeightVariable"));
   }
@@ -93,16 +91,16 @@ TagProbeFitTreeAnalyzer::TagProbeFitTreeAnalyzer(const edm::ParameterSet& pset):
     const ParameterSet cuts = pset.getParameter<ParameterSet>("Cuts");
     vector<string> cutNames = cuts.getParameterNamesForType<vector<string> >();
     for (vector<string>::const_iterator name = cutNames.begin(); name != cutNames.end(); name++) {
-        vector<string> cat = cuts.getParameter<vector<string> >(*name);
-        if(cat.size()==3){
-            fitter.addThresholdCategory(*name, cat[0], cat[1], atof(cat[2].c_str()));
-        }else{
-            LogError("TagProbeFitTreeAnalyzer")<<"Could not create cut: "<<*name<<
-                ". Example: matched = cms.vstring(\"Matched\", \"deltaR\", \"0.5\") ";
-        }
+      vector<string> cat = cuts.getParameter<vector<string> >(*name);
+      if(cat.size()==3){
+	fitter.addThresholdCategory(*name, cat[0], atof(cat[1].c_str()), cat[2]);
+      }else{
+	LogError("TagProbeFitTreeAnalyzer")<<"Could not create cut: "<<*name<<
+	  ". Example: matched = cms.vstring(\"Matched\", \"deltaR\", \"0.5\") ";
+      }
     }
   }
-
+  
   if(pset.existsAs<ParameterSet>("PDFs")){
     const ParameterSet pdfs = pset.getParameter<ParameterSet>("PDFs");
     vector<string> pdfNames = pdfs.getParameterNamesForType<vector<string> >();
@@ -116,9 +114,9 @@ TagProbeFitTreeAnalyzer::TagProbeFitTreeAnalyzer(const edm::ParameterSet& pset):
   vector<string> efficiencyNames = efficiencies.getParameterNamesForType<ParameterSet>();
   for (vector<string>::const_iterator name = efficiencyNames.begin(); name != efficiencyNames.end(); name++) {
     try {
-        calculateEfficiency(*name, efficiencies.getParameter<ParameterSet>(*name));
+      calculateEfficiency(*name, efficiencies.getParameter<ParameterSet>(*name));
     } catch (std::exception &ex) {
-        throw cms::Exception("Error", ex.what());
+      throw cms::Exception("Error", ex.what());
     }
   }
 }
@@ -129,12 +127,12 @@ void TagProbeFitTreeAnalyzer::calculateEfficiency(string name, const edm::Parame
     cout<<"EfficiencyCategoryAndState must be a even-sized list of category names and states of that category (cat1, state1, cat2, state2, ...)."<<endl;
     exit(1);
   }
-
+  
   vector<string> unbinnedVariables;
   if(pset.existsAs<vector<string> >("UnbinnedVariables")){
     unbinnedVariables = pset.getParameter<vector<string> >("UnbinnedVariables");
   }
-
+  
   const ParameterSet binVars = pset.getParameter<ParameterSet>("BinnedVariables");
   map<string, vector<double> >binnedVariables;
   vector<string> variableNames = binVars.getParameterNamesForType<vector<double> >();
@@ -142,6 +140,7 @@ void TagProbeFitTreeAnalyzer::calculateEfficiency(string name, const edm::Parame
     vector<double> binning = binVars.getParameter<vector<double> >(*var);
     binnedVariables[*var] = binning;
   }
+  
   map<string, vector<string> >mappedCategories;
   vector<string> categoryNames = binVars.getParameterNamesForType<vector<string> >();
   for (vector<string>::const_iterator var = categoryNames.begin(); var != categoryNames.end(); var++) {
@@ -153,6 +152,7 @@ void TagProbeFitTreeAnalyzer::calculateEfficiency(string name, const edm::Parame
   if(pset.existsAs<vector<string> >("BinToPDFmap")){
     binToPDFmap = pset.getParameter<vector<string> >("BinToPDFmap");
   }
+
   if((binToPDFmap.size() > 0) && (binToPDFmap.size()%2 == 0)){
     cout<<"BinToPDFmap must have odd size, first string is the default, followed by binRegExp - PDFname pairs!"<<endl;
     exit(2);

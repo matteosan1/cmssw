@@ -45,7 +45,7 @@ public:
   Double_t evaluate() const ;
   
 
-  ClassDef(RooCMSShape,1);
+  ClassDef(RooCMSShape,2);
 
 protected:
 
